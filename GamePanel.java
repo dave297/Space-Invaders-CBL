@@ -22,7 +22,7 @@ public class GamePanel extends JPanel {
                 e.printStackTrace();
             }
         } else {
-            System.err.println("KHÔNG TÌM THẤY ẢNH: /Image/test.jpg");
+            System.err.println("Non image found");
 }
     }
 
@@ -35,7 +35,7 @@ public class GamePanel extends JPanel {
             g.setColor(Color.DARK_GRAY);
             g.fillRect(0, 0, getWidth(), getHeight());
             g.setColor(Color.WHITE);
-            g.drawString("Không tải được ảnh nền", 20, 20);
+            g.drawString("Unable to load", 20, 20);
         }
         
     }
