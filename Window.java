@@ -11,9 +11,11 @@ public class Window extends JFrame {
         this.setContentPane(gamePanel);
         pack();
         this.setLocationRelativeTo(null);
+        gamePanel.setFocusable(true);
+        gamePanel.requestFocusInWindow();
         this.setVisible(true);
-        
     }
+    
     public static void main(String[] args) {
         new Window();
     }
