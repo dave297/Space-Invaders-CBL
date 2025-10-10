@@ -56,6 +56,7 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
         }
     }
 
+    @Override
     public void keyPressed(KeyEvent e) {
         int key = e.getKeyCode();
         if (key == KeyEvent.VK_A || key == KeyEvent.VK_LEFT) {
@@ -66,6 +67,7 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
         repaint();
     }
 
+    @Override
     public void keyReleased(KeyEvent e) {
         int key = e.getKeyCode();
         if (key == KeyEvent.VK_A || key == KeyEvent.VK_LEFT) {
@@ -75,12 +77,13 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
         }
     }
     
-    public void actionPerform(ActionEvent e) {
+    @Override
+    public void actionPerformed(ActionEvent e) {
         if (leftPressed) {
             playerX -= 5;
         } else if (rightPressed) {
             playerX += 5;
         }
-        
+        repaint();
     }
 }
