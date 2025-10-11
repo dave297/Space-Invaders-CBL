@@ -4,8 +4,9 @@ import java.awt.image.*;
 import java.io.IOException;
 import java.net.URL;
 import javax.imageio.ImageIO;
-import javax.swing.*;
 import java.util.ArrayList;
+import javax.swing.*;
+
 
 
 public class GamePanel extends JPanel implements KeyListener, ActionListener {
