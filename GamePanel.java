@@ -23,7 +23,6 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
     private boolean rightPressed = false;
     private ArrayList<Bullet> bullets = new ArrayList<>();
     
-    
     public GamePanel() {
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
         setDoubleBuffered(true);
