@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.net.URL;
 import javax.imageio.ImageIO;
 import javax.swing.*;
+import java.util.ArrayList;
 
 
 public class GamePanel extends JPanel implements KeyListener, ActionListener {
@@ -19,6 +20,7 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
     private Timer timer;
     private boolean leftPressed = false;
     private boolean rightPressed = false;
+    private ArrayList<Bullet> bullets = new ArrayList<>();
     
     
     public GamePanel() {
@@ -36,7 +38,7 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
             e.printStackTrace();
         }
         playerX = (WIDTH - playerWidth) / 2;
-        Timer timer = new Timer(20, this);
+        this.timer = new Timer(15, this);
         timer.start();
     }
 
@@ -47,12 +49,14 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
         if (this.backgroundImg != null) {
             g.drawImage(backgroundImg, 0, 0, getWidth(), getHeight(), null);
             g.drawImage(playerImg, playerX, playerY, playerWidth, playerHeight, null);
+            for (Bullet b: bullets) {
+                b.draw(g);
+            }
         } else {
             g.setColor(Color.DARK_GRAY);
             g.fillRect(0, 0, getWidth(), getHeight());
             g.setColor(Color.WHITE);
             g.drawString("Unable to load", 20, 20);
-            
         }
     }
 
@@ -63,8 +67,17 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
             leftPressed = true;
         } else if (key == KeyEvent.VK_D || key == KeyEvent.VK_RIGHT) {
             rightPressed = true;
+        } else if (key == KeyEvent.VK_SPACE) {
+            bullets.add(new Bullet(playerX, playerY - 10));
+            /*
+            I was trying to make it have some delay between each press
+            in order to preven spamming 'shot' key but i still really dont get it :)))
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e2) {
+                Thread.currentThread().interrupt();
+            }*/
         }
-        repaint();
     }
 
     @Override
@@ -83,6 +96,9 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
             playerX -= 5;
         } else if (rightPressed) {
             playerX += 5;
+        }
+        for (Bullet b: bullets) {
+            b.update();
         }
         repaint();
     }
