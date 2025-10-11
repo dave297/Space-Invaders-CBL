@@ -17,6 +17,7 @@ public class Bullet {
             bulletImg = ImageIO.read(urlBl);
         } catch (IOException e) {
             e.printStackTrace();
+            
         }
     }
 
