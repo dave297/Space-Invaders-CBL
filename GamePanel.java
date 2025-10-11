@@ -3,8 +3,8 @@ import java.awt.event.*;
 import java.awt.image.*;
 import java.io.IOException;
 import java.net.URL;
-import javax.imageio.ImageIO;
 import java.util.ArrayList;
+import javax.imageio.ImageIO;
 import javax.swing.*;
 
 
@@ -89,6 +89,9 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
             rightPressed = false;
         }
     }
+
+    @Override
+    public void keyTyped(KeyEvent e) {}
     
     @Override
     public void actionPerformed(ActionEvent e) {
