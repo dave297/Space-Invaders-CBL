@@ -9,7 +9,6 @@ public class Bullet {
     private int x;
     private int y;
     private int dy;
-
     public Bullet(int startX, int startY, int dy) {
         URL urlBl = getClass().getResource("/Image/bullet.png");
         this.x = startX;
@@ -24,12 +23,9 @@ public class Bullet {
     }
 
     public void update() {
-        this.y -= 5;
+        this.y += dy;
     }
 
-    public void updateDy() {
-        this.dy += 5;
-    }
 
     protected void draw(Graphics g) {
         g.drawImage(bulletImg, x + 37, y, null);
