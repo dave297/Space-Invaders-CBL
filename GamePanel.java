@@ -12,6 +12,9 @@ import javax.swing.*;
 public class GamePanel extends JPanel implements KeyListener, ActionListener {
     private BufferedImage backgroundImg;  
     private BufferedImage playerImg; 
+    private BufferedImage invaderImg1;
+    private BufferedImage invaderImg2;
+    private BufferedImage invaderImg3;
     public static final int WIDTH = 800;
     public static final int HEIGHT = 600;
     private int playerX;
@@ -22,7 +25,13 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
     private boolean leftPressed = false;
     private boolean rightPressed = false;
     private ArrayList<Bullet> bullets = new ArrayList<>();
-    
+    private ArrayList<Invader> invaders = new ArrayList<>();
+    private ArrayList<Bullet> enemyBullets = new ArrayList<>();
+    private int groupDirection = 1;
+    private int groupSpeed = 1;
+    private int dropDistance = 20;
+    private int enemyCooldown = 20;
+
     public GamePanel() {
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
         setDoubleBuffered(true);
@@ -31,15 +40,50 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
 
         URL urlBg = getClass().getResource("/Image/bground.png");
         URL urlPl = getClass().getResource("/Image/player.png");
+        URL urlInv1 = getClass().getResource("/Image/ship(3).png");
+        URL urlInv2 = getClass().getResource("/Image/ship(7).png");
+        URL urlInv3 = getClass().getResource("/Image/ship(10).png");
+
         try {
             backgroundImg = ImageIO.read(urlBg);
             playerImg = ImageIO.read(urlPl);
+            invaderImg1 = ImageIO.read(urlInv1);
+            invaderImg2 = ImageIO.read(urlInv2);
+            invaderImg3 = ImageIO.read(urlInv3);
         } catch (IOException e) {
             e.printStackTrace();
         }
         playerX = (WIDTH - playerWidth) / 2;
         this.timer = new Timer(15, this);
         timer.start();
+        initializeInvaders();
+    }
+
+    public void initializeInvaders() {
+        int rows = 3;
+        int columns = 8;
+        int spacingX = 80;
+        int spacingY = 60;
+        int startX = 50;
+        int startY = 50;
+
+        for (int i = 0; i < rows; i ++) {
+            for (int j = 0; j < columns; j++) {
+                int x = startX + j * spacingX;
+                int y = startY + i * spacingY;
+                int type = (i % 3) + 1;
+                invaders.add(new Invader(x, y, type));
+            }
+        }
+    }
+
+    private boolean isBehind(Invader a) {
+        for (Invader i : invaders) {
+            if (i.isAlive() && i.getY() < a.getY()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -51,6 +95,25 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
             g.drawImage(playerImg, playerX, playerY, playerWidth, playerHeight, null);
             for (Bullet b: bullets) {
                 b.draw(g);
+            }
+            for (Invader i : invaders) {
+                if (!i.isAlive()) {
+                    continue;
+                }
+                BufferedImage img = null;
+                switch (i.getType()) {
+                    case 1: img = invaderImg1;
+                    break;
+                    case 2: img = invaderImg2; 
+                    break;
+                    case 3: img = invaderImg3;
+                    break;
+                    default: 
+                        img = invaderImg1;
+                        break;
+                }
+                i.draw(g, img);
+                
             }
         } else {
             g.setColor(Color.DARK_GRAY);
@@ -68,7 +131,7 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
         } else if (key == KeyEvent.VK_D || key == KeyEvent.VK_RIGHT) {
             rightPressed = true;
         } else if (key == KeyEvent.VK_SPACE) {
-            bullets.add(new Bullet(playerX, playerY - 10));
+            bullets.add(new Bullet(playerX, playerY - 10,0));
             /*
             I was trying to make it have some delay between each press
             in order to preven spamming 'shot' key but i still really dont get it :)))
@@ -103,6 +166,51 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
         for (Bullet b: bullets) {
             b.update();
         }
+        boolean willHitNext = false;
+        for (Invader i : invaders) {
+            int nextLeft = i.getX() + groupDirection * groupSpeed;
+            int nextRight = nextLeft + Invader.getWidth();
+            if (nextLeft <= 0 || nextRight >= WIDTH) {
+                willHitNext = true;
+                break;
+            }
+        }
+        if (willHitNext) {
+            groupDirection *= -1;
+            for (Invader i : invaders) {
+                i.moveVertical(Invader.getHeight() / 5);
+            }
+        } else {
+            for (Invader i : invaders) {
+                i.moveHorizontal(groupDirection * groupSpeed);
+            }
+        }
+        
+        for (int bul = bullets.size() - 1; bul >= 0; bul--) {
+            Bullet b = bullets.get(bul);
+
+            boolean consumed = false;
+            for (Invader i: invaders) {
+                if (!i.isAlive()) {
+                    continue;
+                }
+                boolean intersects = 
+                    b.getX() < i.getX() + Invader.getWidth() 
+                    && b.getX() + b.getWidth() > i.getX() 
+                    && b.getY() < i.getY() + Invader.getHeight() 
+                    && b.getY() + b.getHeight() > i.getY();
+
+                if (intersects) {
+                    i.kill();
+                    bullets.remove(bul);
+                    consumed = true;
+                    break;
+                }
+            }
+        }
+        invaders.removeIf(inv -> !inv.isAlive());
+        bullets.removeIf(b -> b.getY() < 0);
+        
         repaint();
     }
 }
