@@ -60,7 +60,7 @@ public class Invader {
             return;
         } 
         g.drawImage(image, x, y, WIDTH, HEIGHT, null);
-        }
+    }
 
     
 }

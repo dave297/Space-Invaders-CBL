@@ -9,6 +9,7 @@ public class Bullet {
     private int x;
     private int y;
     private int dy;
+    
     public Bullet(int startX, int startY, int dy) {
         URL urlBl = getClass().getResource("/Image/bullet.png");
         this.x = startX;
@@ -32,13 +33,23 @@ public class Bullet {
     }
     
     // Getters for collision detection
-    public int getX() { return x + 37; } // Account for the offset in drawing
-    public int getY() { return y; }
+    public int getX() {
+        return x + 37; 
+    } // Account for the offset in drawing
+
+    public int getY(){
+        return y; 
+    }
 
     public int getDy() {
         return dy;
     }
     
-    public int getWidth() { return bulletImg != null ? bulletImg.getWidth() : 10; }
-    public int getHeight() { return bulletImg != null ? bulletImg.getHeight() : 20; }
+    public int getWidth() { 
+        return bulletImg != null ? bulletImg.getWidth() : 10; 
+    }
+
+    public int getHeight() { 
+        return bulletImg != null ? bulletImg.getHeight() : 20; 
+    }
 }

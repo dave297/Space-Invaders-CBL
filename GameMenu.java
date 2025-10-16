@@ -24,7 +24,7 @@ public class GameMenu extends JPanel {
         startGame.setBounds(btX, btY, 150, 50);
         startGame.setFont(new Font("Arial", Font.PLAIN, 20));
         this.add(startGame);
-        startGame.addActionListener(e -> {System.out.println("Clicked"); w.StartGame();});
+        startGame.addActionListener(e -> w.startGame());
         setVisible(true);
     }
 

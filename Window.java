@@ -25,7 +25,7 @@ public class Window extends JFrame {
         this.setVisible(true);
     }
 
-    public void StartGame() {
+    public void startGame() {
         gamePanel = new GamePanel();
         root.add(gamePanel, "game");
         cardLayout.show(root, "game");

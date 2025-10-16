@@ -15,7 +15,7 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
     private BufferedImage invaderImg1;
     private BufferedImage invaderImg2;
     private BufferedImage invaderImg3;
-    public static final int WIDTH = 800;
+    public static final int WIDTH = 1200;
     public static final int HEIGHT = 600;
     private int playerX;
     private boolean playerAlive = true;
@@ -42,9 +42,9 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
 
         URL urlBg = getClass().getResource("/Image/bground.png");
         URL urlPl = getClass().getResource("/Image/player.png");
-        URL urlInv1 = getClass().getResource("/Image/ship(3).png");
-        URL urlInv2 = getClass().getResource("/Image/ship(7).png");
-        URL urlInv3 = getClass().getResource("/Image/ship(10).png");
+        URL urlInv1 = getClass().getResource("/Image/Ship/png/ship(3).png");
+        URL urlInv2 = getClass().getResource("/Image/Ship/png/ship (7).png");
+        URL urlInv3 = getClass().getResource("/Image/Ship/png/ship (10).png");
 
         try {
             backgroundImg = ImageIO.read(urlBg);
@@ -227,8 +227,8 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
             }
 
             for (Invader s : shooters) {
-                if (Math.random() < 0.4) {
-                    bullets.add(new Bullet(s.getX(), s.getY() + Invader.getHeight(), 5));
+                if (Math.random() < 0.2) {
+                    bullets.add(new Bullet(s.getX(), s.getY() + Invader.getHeight(), 2));
                 }
             }
 
