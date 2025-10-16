@@ -32,6 +32,7 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
     private int dropDistance = 20;
     private int enemyShootTick = 0;
     private int enemyShootForFrame = 45;
+    private int score = 0;
     
 
     public GamePanel() {
@@ -61,6 +62,10 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
         initializeInvaders();
     }
 
+    public void updateScore(int score) {
+
+    }
+
     public void initializeInvaders() {
         int rows = 3;
         int columns = 8;
@@ -79,6 +84,27 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
         }
     }
 
+    public void paintInvaders(Graphics g) {
+        for (Invader i : invaders) {
+            if (!i.isAlive()) {
+                continue;
+            }
+            BufferedImage img = null;
+            switch (i.getType()) {
+                case 1: img = invaderImg1;
+                break;
+                case 2: img = invaderImg2; 
+                break;
+                case 3: img = invaderImg3;
+                break;
+                default: 
+                    img = invaderImg1;
+                    break;
+            }
+            i.draw(g, img);
+        }
+    }
+
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -91,25 +117,9 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
             for (Bullet b: bullets) {
                 b.draw(g);
             }
-            for (Invader i : invaders) {
-                if (!i.isAlive()) {
-                    continue;
-                }
-                BufferedImage img = null;
-                switch (i.getType()) {
-                    case 1: img = invaderImg1;
-                    break;
-                    case 2: img = invaderImg2; 
-                    break;
-                    case 3: img = invaderImg3;
-                    break;
-                    default: 
-                        img = invaderImg1;
-                        break;
-                }
-                i.draw(g, img);
-                
-            }
+
+            paintInvaders(g);
+            
         } else {
             g.setColor(Color.DARK_GRAY);
             g.fillRect(0, 0, getWidth(), getHeight());
@@ -128,7 +138,7 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
                 rightPressed = true;
             } else if (key == KeyEvent.VK_SPACE) {
                 bullets.add(new Bullet(playerX, playerY - 10, -5));
-        }
+            }
         
             /*
             I was trying to make it have some delay between each press
@@ -154,16 +164,7 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
     @Override
     public void keyTyped(KeyEvent e) {}
     
-    @Override
-    public void actionPerformed(ActionEvent e) {
-        if (leftPressed && playerX > 0 && playerAlive) {
-            playerX -= 5;
-        } else if (rightPressed && playerX < WIDTH - playerWidth && playerAlive) {
-            playerX += 5;
-        }
-        for (Bullet b: bullets) {
-            b.update();
-        }
+    public void willHitWall() {
         boolean willHitNext = false;
         for (Invader i : invaders) {
             int nextLeft = i.getX() + groupDirection * groupSpeed;
@@ -183,6 +184,9 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
                 i.moveHorizontal(groupDirection * groupSpeed);
             }
         }
+    }
+
+    public void invaderGetsHit() {
         for (int bul = bullets.size() - 1; bul >= 0; bul--) {
             Bullet b = bullets.get(bul);
             boolean consumed = false;
@@ -200,14 +204,18 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
                     i.kill();
                     bullets.remove(b);
                     consumed = true;
+                    score += 10;    
                     break;
                 }
             }
         }
         if (invaders.isEmpty()) {
-            groupSpeed += 2; 
+            groupSpeed += 2;
+            score += 50;
             initializeInvaders();
         }
+    }
+    public void enemyShoot() {
         enemyShootTick++;
         if (enemyShootForFrame <= enemyShootTick) {
             enemyShootTick = 0;
@@ -233,7 +241,9 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
             }
 
         }
+    }
 
+    public void playerHit() {
         for (int i = bullets.size() - 1; i >= 0; i--) {
             Bullet b = bullets.get(i);
 
@@ -249,6 +259,23 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
                 }
             }
         }
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        if (leftPressed && playerX > 0 && playerAlive) {
+            playerX -= 5;
+        } else if (rightPressed && playerX < WIDTH - playerWidth && playerAlive) {
+            playerX += 5;
+        }
+        for (Bullet b: bullets) {
+            b.update();
+        }
+
+        willHitWall();
+        invaderGetsHit();
+        enemyShoot();
+        playerHit();
 
         invaders.removeIf(inv -> !inv.isAlive());
         bullets.removeIf(b -> b.getY() < 0 || b.getY() > HEIGHT);
