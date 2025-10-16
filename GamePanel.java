@@ -33,7 +33,7 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
     private int enemyShootTick = 0;
     private int enemyShootForFrame = 45;
     private int score = 0;
-    
+    private Font pixelFont;
 
     public GamePanel() {
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
@@ -55,6 +55,12 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
             invaderImg3 = ImageIO.read(urlInv3);
         } catch (IOException e) {
             e.printStackTrace();
+        }
+        try {
+            pixelFont = Font.createFont(Font.TRUETYPE_FONT,
+            getClass().getResourceAsStream("/fonts/pixel.ttf")).deriveFont(24f);
+        } catch (Exception e) {
+            pixelFont = new Font("Courier New", Font.BOLD, 24);
         }
         playerX = (WIDTH - playerWidth) / 2;
         this.timer = new Timer(15, this);
@@ -120,6 +126,12 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
 
             paintInvaders(g);
             
+            g.setFont(pixelFont);
+            g.setColor(Color.WHITE);
+            String scoreText = "SCORE: " + score;
+            FontMetrics fm = g.getFontMetrics();
+            int scoreX = WIDTH - fm.stringWidth(scoreText) - 20;
+            g.drawString(scoreText, scoreX, 30);
         } else {
             g.setColor(Color.DARK_GRAY);
             g.fillRect(0, 0, getWidth(), getHeight());
