@@ -34,6 +34,10 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
     private int enemyShootForFrame = 45;
     private int score = 0;
     private Font pixelFont;
+    private int playerLives = 3;
+    private boolean isVisible = true;
+    private Timer blinkTimer;
+    private boolean invulnerable = false;
 
     public GamePanel() {
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
@@ -117,7 +121,7 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
         
         if (this.backgroundImg != null) {
             g.drawImage(backgroundImg, 0, 0, getWidth(), getHeight(), null);
-            if (playerAlive) {
+            if (playerAlive && isVisible) {
                 g.drawImage(playerImg, playerX, playerY, playerWidth, playerHeight, null);
             }
             for (Bullet b: bullets) {
@@ -129,9 +133,11 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
             g.setFont(pixelFont);
             g.setColor(Color.WHITE);
             String scoreText = "SCORE: " + score;
+            String availLives = "Lives: " + playerLives;
             FontMetrics fm = g.getFontMetrics();
             int scoreX = WIDTH - fm.stringWidth(scoreText) - 20;
             g.drawString(scoreText, scoreX, 30);
+            g.drawString(availLives, 30, 30);
         } else {
             g.setColor(Color.DARK_GRAY);
             g.fillRect(0, 0, getWidth(), getHeight());
@@ -256,9 +262,13 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
     }
 
     public void playerHit() {
+        if (!playerAlive || invulnerable) {
+            return;
+        }
+
         for (int i = bullets.size() - 1; i >= 0; i--) {
             Bullet b = bullets.get(i);
-
+            
             if (b.getDy() > 0 && playerAlive) {
                 boolean hitPlayer = 
                     b.getX() < playerX + playerWidth
@@ -267,10 +277,46 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
                     && b.getY() + b.getHeight() > playerY;
                 if (hitPlayer) {
                     playerAlive = false;
+                    respawnPlayer(playerLives);
+                    if (playerLives > 0) {
+                        playerLives--;
+                    }
                     bullets.remove(i);
                 }
             }
         }
+    }
+
+    public void respawnPlayer(int n) {
+        if (!playerAlive && n > 0) {
+            playerAlive = true;
+            isVisible = true;
+            playerX = (WIDTH - playerWidth) / 2;
+            invulnerable = true;
+            blinkOnRespawn(2, 120);
+        }
+    }
+
+    public void blinkOnRespawn(int flashes, int intervalMs) {
+        if (blinkTimer != null) {
+            blinkTimer.stop();
+            blinkTimer = null;
+        }
+
+        final int[] togglesLeft = {Math.max(0, flashes) * 2};
+        blinkTimer = new Timer(intervalMs, e -> {
+            isVisible = !isVisible;
+            togglesLeft[0]--;
+            if (togglesLeft[0] <= 0) {
+                ((Timer) e.getSource()).stop();
+                blinkTimer = null;
+                isVisible = true;
+                invulnerable = false;
+            }
+            repaint();
+        });
+        blinkTimer.setInitialDelay(0);
+        blinkTimer.start();
     }
 
     @Override
