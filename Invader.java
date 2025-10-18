@@ -2,21 +2,70 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 
 
-public class Invader {
-    private BufferedImage invaderImageType1;
-    private BufferedImage invaderImageType2;
-    private BufferedImage invaderImageType3;
-    private int x;
-    private int y;
-    private int type;
-    private static final int WIDTH = 50;
-    private static final int HEIGHT = 50;
-    private boolean alive = true;
+abstract class Invader {
+    protected int x;
+    protected int y;
+    protected int width = 50;
+    protected int height = 50;
+    protected boolean alive = true;
+    protected int health = 1;
 
-    public Invader(int startX, int startY, int type) {
+    protected MovementBehaviour movement;
+    protected HealthModel healthModel;
+    protected ShootingBehaviour shooting;
+
+
+    public interface MovementBehaviour {
+        void updatePosition(Invader self, int panelWidth, 
+            int tick, int groupDirection, int groupSpeed);
+        
+        default boolean wantsFormationDrop() {
+            return true;
+        }
+    }
+
+    public interface ShootingBehaviour {
+        void maybeShoot(Invader self, int tick);
+        
+        default boolean canShoot() {
+            return false;
+        }
+        
+        default double probability() {
+            return 0.0;
+        }
+    }
+    
+    public interface HealthModel {
+        void applyDamage(int amount);
+
+        boolean isAlive();
+        
+        int currentHealth(); 
+    }
+
+    public final void update(int panelWidth, int tick, int groupDirection, int groupSpeed) {
+        if (!alive) {
+            return;
+        }
+        movement.updatePosition(this, panelWidth, tick, groupDirection, groupSpeed);
+        shooting.maybeShoot(this, tick);
+    }
+
+    public void takeHit() {
+        healthModel.applyDamage(1);
+        if (!healthModel.isAlive()) {
+            alive = false;
+        }
+    }
+
+    public boolean canDropOnBounce() {
+        return movement.wantsFormationDrop();
+    }
+
+    public Invader(int startX, int startY) {
         this.x = startX;
         this.y = startY;
-        this.type = type;
     }
 
     public int getX() {
@@ -27,16 +76,12 @@ public class Invader {
         return this.y;
     }
 
-    public int getType() {
-        return this.type;
+    public int getHeight() {
+        return height;
     }
 
-    public static int getWidth() {
-        return WIDTH;
-    }
-    
-    public static int getHeight() {
-        return HEIGHT;
+    public int getWidth() {
+        return width;
     }
 
     public boolean isAlive() {
@@ -45,6 +90,15 @@ public class Invader {
 
     public void kill() {
         alive = false;
+    }
+
+    public boolean canShoot() {
+        return false;
+    }
+
+
+    public double getShootProbability() {
+        return 0.0;
     }
 
     public void moveHorizontal(int dx) {
@@ -59,7 +113,7 @@ public class Invader {
         if (!alive) {
             return;
         } 
-        g.drawImage(image, x, y, WIDTH, HEIGHT, null);
+        g.drawImage(image, x, y, width, height, null);
     }
 
     

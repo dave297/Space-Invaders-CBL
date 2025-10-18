@@ -85,7 +85,7 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
                 int x = startX + j * spacingX;
                 int y = startY + i * spacingY;
                 int type = (i % 3) + 1;
-                invaders.add(new Invader(x, y, type));
+                invaders.add(new Invader(x, y));
             }
         }
     }
@@ -96,6 +96,7 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
                 continue;
             }
             BufferedImage img = null;
+            /*
             switch (i.getType()) {
                 case 1: img = invaderImg1;
                 break;
@@ -107,6 +108,7 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
                     img = invaderImg1;
                     break;
             }
+            */
             i.draw(g, img);
         }
     }
@@ -213,7 +215,7 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
                     && b.getY() + b.getHeight() > i.getY();
 
                 if (intersects && b.getDy() < 0) {
-                    i.kill();
+                    i.takeHit();
                     bullets.remove(b);
                     consumed = true;
                     score += 10;    
