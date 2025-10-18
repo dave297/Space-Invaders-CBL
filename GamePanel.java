@@ -7,8 +7,6 @@ import java.util.ArrayList;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 
-
-
 public class GamePanel extends JPanel implements KeyListener, ActionListener {
     private BufferedImage backgroundImg;  
     private BufferedImage playerImg; 
@@ -38,6 +36,8 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
     private boolean isVisible = true;
     private Timer blinkTimer;
     private boolean invulnerable = false;
+    private boolean confirmRestart = false;
+    private Window w;
 
     public GamePanel() {
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
@@ -133,7 +133,12 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
             g.setFont(pixelFont);
             g.setColor(Color.WHITE);
             String scoreText = "SCORE: " + score;
-            String availLives = "Lives: " + playerLives;
+            String availLives = "";
+            if (playerLives > 0) {
+                availLives = "Lives: " + playerLives;
+            } else {
+                availLives = "Lives: " + 0;
+            }
             FontMetrics fm = g.getFontMetrics();
             int scoreX = WIDTH - fm.stringWidth(scoreText) - 20;
             g.drawString(scoreText, scoreX, 30);
@@ -143,6 +148,22 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
             g.fillRect(0, 0, getWidth(), getHeight());
             g.setColor(Color.WHITE);
             g.drawString("Unable to load", 20, 20);
+        }
+        if (playerLives < 0) {
+            String lose = "GAME OVER! PRESS 'SPACE' TO RESTART.";
+            String giveUp = "PRESS 'ESC' TO MENU.";
+            FontMetrics fm = g.getFontMetrics();
+            int textWidthLose = fm.stringWidth(lose);
+            int textWidthGiveUp = fm.stringWidth(giveUp);
+            int textHeight = fm.getHeight();
+            int xLose = (WIDTH - textWidthLose) / 2;
+            int xGiveUp = (WIDTH - textWidthGiveUp) / 2;
+            int y = (HEIGHT - textHeight) / 2 + fm.getAscent();
+
+
+            g.drawString(lose, xLose, y);
+            g.drawString(giveUp, xGiveUp, y + 50);
+            confirmRestart = true;
         }
     }
 
@@ -166,6 +187,11 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
             } catch (InterruptedException e2) {
                 Thread.currentThread().interrupt();
             }*/
+        }
+        if (confirmRestart && key == KeyEvent.VK_SPACE) {
+            resetGame();
+        } else if (confirmRestart && key == KeyEvent.VK_ESCAPE) {
+            GameMenu a = new GameMenu(w);
         }
     }
 
@@ -253,7 +279,7 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
             }
 
             for (Invader s : shooters) {
-                if (Math.random() < 0.2) {
+                if (Math.random() < 0.25) {
                     bullets.add(new Bullet(s.getX(), s.getY() + Invader.getHeight(), 2));
                 }
             }
@@ -278,9 +304,7 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
                 if (hitPlayer) {
                     playerAlive = false;
                     respawnPlayer(playerLives);
-                    if (playerLives > 0) {
-                        playerLives--;
-                    }
+                    playerLives--;
                     bullets.remove(i);
                 }
             }
@@ -293,7 +317,7 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
             isVisible = true;
             playerX = (WIDTH - playerWidth) / 2;
             invulnerable = true;
-            blinkOnRespawn(2, 120);
+            blinkOnRespawn(3, 120);
         }
     }
 
@@ -317,6 +341,41 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
         });
         blinkTimer.setInitialDelay(0);
         blinkTimer.start();
+    }
+
+    public void resetGame() {
+        if (blinkTimer != null) {
+            blinkTimer.stop();
+            blinkTimer = null;
+        }
+
+        bullets.clear();
+        invaders.clear();
+        initializeInvaders();
+
+        groupDirection = 1;
+        groupSpeed = 1;
+        dropDistance = 20;
+        enemyShootTick = 0;
+        enemyShootForFrame = 45;
+        score = 0;
+        playerLives = 3;
+        playerAlive = true;
+        invulnerable = false;
+        isVisible = true;
+        leftPressed = false;
+        rightPressed = false;
+        confirmRestart = false;
+        playerX = (WIDTH - playerWidth) / 2;
+
+        if (timer == null) {
+            timer = new Timer(15, this);
+            timer.start();
+        } else if (!timer.isRunning()) {
+            timer.start();
+        }
+
+        repaint();
     }
 
     @Override
