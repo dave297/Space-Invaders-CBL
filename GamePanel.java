@@ -37,9 +37,10 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
     private Timer blinkTimer;
     private boolean invulnerable = false;
     private boolean confirmRestart = false;
-    private Window w;
+    private final Window parent;
 
-    public GamePanel() {
+    public GamePanel(Window parent) {
+        this.parent = parent;
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
         setDoubleBuffered(true);
         setFocusable(true);
@@ -191,7 +192,8 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
         if (confirmRestart && key == KeyEvent.VK_SPACE) {
             resetGame();
         } else if (confirmRestart && key == KeyEvent.VK_ESCAPE) {
-            GameMenu a = new GameMenu(w);
+            timer.stop();
+            parent.showMenu();
         }
     }
 
