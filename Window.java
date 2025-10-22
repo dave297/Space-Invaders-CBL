@@ -46,5 +46,8 @@ public class Window extends JFrame {
     
     public static void main(String[] args) {
         Window a = new Window();
+        GamePanel b = new GamePanel(a);
+        b.play("Music/A _Lonely_Cherry_Tree.wav");
+        b.loop();
     }
 }

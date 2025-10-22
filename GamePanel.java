@@ -1,10 +1,12 @@
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.*;
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import javax.imageio.ImageIO;
+import javax.sound.sampled.*;
 import javax.swing.*;
 
 public class GamePanel extends JPanel implements KeyListener, ActionListener {
@@ -38,6 +40,7 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
     private boolean invulnerable = false;
     private boolean confirmRestart = false;
     private final Window parent;
+    private Clip clip;
 
     public GamePanel(Window parent) {
         this.parent = parent;
@@ -58,6 +61,8 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
             invaderImg1 = ImageIO.read(urlInv1);
             invaderImg2 = ImageIO.read(urlInv2);
             invaderImg3 = ImageIO.read(urlInv3);
+
+
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -71,6 +76,24 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
         this.timer = new Timer(15, this);
         timer.start();
         initializeInvaders();
+    }
+
+    public void play(String filePath) {
+        try {
+            File file = new File(filePath);
+            AudioInputStream audioStream = AudioSystem.getAudioInputStream(file);
+            clip = AudioSystem.getClip();
+            clip.open(audioStream);
+            clip.start();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void loop() {
+        if (clip != null) {
+            clip.loop(Clip.LOOP_CONTINUOUSLY);
+        }
     }
 
     public void updateScore(int score) {
@@ -281,8 +304,8 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
             }
 
             for (Invader s : shooters) {
-                if (Math.random() < 0.25) {
-                    bullets.add(new Bullet(s.getX(), s.getY() + Invader.getHeight(), 2));
+                if (Math.random() < 0.5) {
+                    bullets.add(new Bullet(s.getX(), s.getY() + Invader.getHeight(), 5));
                 }
             }
 
@@ -308,7 +331,12 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
                     respawnPlayer(playerLives);
                     playerLives--;
                     bullets.remove(i);
+                    
                 }
+                if (playerLives < 0) {
+                    play("Music/death_sound_effect.wav");
+                    timer.stop();
+                } 
             }
         }
     }
