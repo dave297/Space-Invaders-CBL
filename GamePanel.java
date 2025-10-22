@@ -85,7 +85,7 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
                 int x = startX + j * spacingX;
                 int y = startY + i * spacingY;
                 int type = (i % 3) + 1;
-                invaders.add(new Invader(x, y));
+                invaders.add(new DefaultInvader(x, y));
             }
         }
     }
@@ -182,7 +182,7 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
         boolean willHitNext = false;
         for (Invader i : invaders) {
             int nextLeft = i.getX() + groupDirection * groupSpeed;
-            int nextRight = nextLeft + Invader.getWidth();
+            int nextRight = nextLeft + i.getWidth();
             if (nextLeft <= 0 || nextRight >= WIDTH) {
                 willHitNext = true;
                 break;
@@ -191,11 +191,13 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
         if (willHitNext) {
             groupDirection *= -1;
             for (Invader i : invaders) {
-                i.moveVertical(Invader.getHeight() / 5);
+                if (i.canDropOnBounce()) {
+                    i.moveVertical(i.getHeight() / 5);
+                }
             }
         } else {
             for (Invader i : invaders) {
-                i.moveHorizontal(groupDirection * groupSpeed);
+                i.update(WIDTH, 0, groupDirection, groupSpeed);
             }
         }
     }
@@ -215,7 +217,7 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
                     && b.getY() + b.getHeight() > i.getY();
 
                 if (intersects && b.getDy() < 0) {
-                    i.takeHit();
+                    i.kill();
                     bullets.remove(b);
                     consumed = true;
                     score += 10;    

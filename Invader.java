@@ -9,11 +9,19 @@ abstract class Invader {
     protected int height = 50;
     protected boolean alive = true;
     protected int health = 1;
-
+    protected int shoot;
+    protected int move;
+    
     protected MovementBehaviour movement;
     protected HealthModel healthModel;
     protected ShootingBehaviour shooting;
 
+    public Invader(int startX, int startY) {
+        this.x = startX;
+        this.y = startY;
+    }
+    
+    public abstract void update(int panelWidth, int tick, int groupDirection, int groupSpeed);
 
     public interface MovementBehaviour {
         void updatePosition(Invader self, int panelWidth, 
@@ -43,77 +51,65 @@ abstract class Invader {
         
         int currentHealth(); 
     }
-
-    public final void update(int panelWidth, int tick, int groupDirection, int groupSpeed) {
-        if (!alive) {
-            return;
-        }
-        movement.updatePosition(this, panelWidth, tick, groupDirection, groupSpeed);
-        shooting.maybeShoot(this, tick);
-    }
+    
+    public abstract void draw(Graphics g, BufferedImage image);
 
     public void takeHit() {
-        healthModel.applyDamage(1);
-        if (!healthModel.isAlive()) {
+        if (healthModel != null) {
+            healthModel.applyDamage(1);
+            if (!healthModel.isAlive()) {
+                alive = false;
+            }
+        } else {
             alive = false;
         }
+    }
+
+    public double getShootProbability() {
+        if (shooting != null) {
+            return shooting.probability();
+        }
+        return 0.0;
     }
 
     public boolean canDropOnBounce() {
         return movement.wantsFormationDrop();
     }
 
-    public Invader(int startX, int startY) {
-        this.x = startX;
-        this.y = startY;
-    }
-
-    public int getX() {
-        return this.x;
-    }
-
-    public int getY() {
-        return this.y;
-    }
-
-    public int getHeight() {
-        return height;
-    }
-
-    public int getWidth() {
-        return width;
-    }
-
-    public boolean isAlive() {
-        return alive;
-    }
-
-    public void kill() {
-        alive = false;
-    }
-
     public boolean canShoot() {
         return false;
     }
 
-
-    public double getShootProbability() {
-        return 0.0;
+    public final int getX() {
+        return this.x;
     }
 
-    public void moveHorizontal(int dx) {
+    public final int getY() {
+        return this.y;
+    }
+
+    public final int getHeight() {
+        return height;
+    }
+
+    public final int getWidth() {
+        return width;
+    }
+
+    public final boolean isAlive() {
+        return alive;
+    }
+
+    public final void kill() {
+        alive = false;
+    }
+
+    public final void moveHorizontal(int dx) {
         x += dx;
     }
 
-    public void moveVertical(int dy) {
+    public final void moveVertical(int dy) {
         y += dy;
-    }
-
-    public void draw(Graphics g, BufferedImage image) {
-        if (!alive) {
-            return;
-        } 
-        g.drawImage(image, x, y, width, height, null);
     }
 
     
