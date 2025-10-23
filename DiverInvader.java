@@ -24,7 +24,7 @@ public class DiverInvader extends Invader {
         if (!alive || g == null) {
             return;
         }
-        if (image != null) {
+        if (img != null) {
             g.drawImage(img, x, y, width, height, null);
         } else { 
             g.setColor(Color.ORANGE);
@@ -32,5 +32,10 @@ public class DiverInvader extends Invader {
             g.setColor(Color.WHITE);
             g.drawString("Diver", x, y);
         }
+    }
+
+    @Override
+    public boolean canDropOnBounce() {
+        return false;
     }
 }

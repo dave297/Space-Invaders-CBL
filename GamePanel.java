@@ -12,9 +12,6 @@ import javax.swing.*;
 public class GamePanel extends JPanel implements KeyListener, ActionListener {
     private BufferedImage backgroundImg;  
     private BufferedImage playerImg; 
-    private BufferedImage invaderImg1;
-    private BufferedImage invaderImg2;
-    private BufferedImage invaderImg3;
     public static final int WIDTH = 1200;
     public static final int HEIGHT = 600;
     private int playerX;
@@ -26,33 +23,25 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
     private boolean leftPressed = false;
     private boolean rightPressed = false;
     private ArrayList<Bullet> bullets = new ArrayList<>();
-    private ArrayList<Invader> invaders = new ArrayList<>();
-    private int groupDirection = 1;
-    private int groupSpeed = 1;
-    private int dropDistance = 20;
-    private int enemyShootTick = 0;
-    private int enemyShootForFrame = 45;
     private int score = 0;
     private Font pixelFont;
+
+    private InvaderManager invaderManager;
 
     public GamePanel() {
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
         setDoubleBuffered(true);
         setFocusable(true);
         addKeyListener(this);
+        invaderManager = new InvaderManager();
+        invaderManager.initializeInvaders();
 
         URL urlBg = getClass().getResource("/Image/bground.png");
         URL urlPl = getClass().getResource("/Image/player.png");
-        URL urlInv1 = getClass().getResource("/Image/Ship/png/ship(3).png");
-        URL urlInv2 = getClass().getResource("/Image/Ship/png/ship (7).png");
-        URL urlInv3 = getClass().getResource("/Image/Ship/png/ship (10).png");
 
         try {
             backgroundImg = ImageIO.read(urlBg);
             playerImg = ImageIO.read(urlPl);
-            invaderImg1 = ImageIO.read(urlInv1);
-            invaderImg2 = ImageIO.read(urlInv2);
-            invaderImg3 = ImageIO.read(urlInv3);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -65,53 +54,9 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
         playerX = (WIDTH - playerWidth) / 2;
         this.timer = new Timer(15, this);
         timer.start();
-        initializeInvaders();
     }
 
-    public void updateScore(int score) {
 
-    }
-
-    public void initializeInvaders() {
-        int rows = 3;
-        int columns = 8;
-        int spacingX = 80;
-        int spacingY = 60;
-        int startX = 50;
-        int startY = 50;
-
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < columns; j++) {
-                int x = startX + j * spacingX;
-                int y = startY + i * spacingY;
-                int type = (i % 3) + 1;
-                invaders.add(new DefaultInvader(x, y));
-            }
-        }
-    }
-
-    public void paintInvaders(Graphics g) {
-        for (Invader i : invaders) {
-            if (!i.isAlive()) {
-                continue;
-            }
-            BufferedImage img = null;
-            /*
-            switch (i.getType()) {
-                case 1: img = invaderImg1;
-                break;
-                case 2: img = invaderImg2; 
-                break;
-                case 3: img = invaderImg3;
-                break;
-                default: 
-                    img = invaderImg1;
-                    break;
-            }
-            */
-            i.draw(g, img);
-        }
-    }
 
     @Override
     protected void paintComponent(Graphics g) {
@@ -125,12 +70,16 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
             for (Bullet b: bullets) {
                 b.draw(g);
             }
-
-            paintInvaders(g);
             
+            invaderManager.draw(g);
+
+            for (Bullet b : invaderManager.getEnemyBullets()) {
+                b.draw(g);
+            }
+
             g.setFont(pixelFont);
             g.setColor(Color.WHITE);
-            String scoreText = "SCORE: " + score;
+            String scoreText = "SCORE: " + invaderManager.getScore();
             FontMetrics fm = g.getFontMetrics();
             int scoreX = WIDTH - fm.stringWidth(scoreText) - 20;
             g.drawString(scoreText, scoreX, 30);
@@ -140,6 +89,8 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
             g.setColor(Color.WHITE);
             g.drawString("Unable to load", 20, 20);
         }
+
+
     }
 
     @Override
@@ -178,104 +129,7 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
     @Override
     public void keyTyped(KeyEvent e) {}
     
-    public void willHitWall() {
-        boolean willHitNext = false;
-        for (Invader i : invaders) {
-            int nextLeft = i.getX() + groupDirection * groupSpeed;
-            int nextRight = nextLeft + i.getWidth();
-            if (nextLeft <= 0 || nextRight >= WIDTH) {
-                willHitNext = true;
-                break;
-            }
-        }
-        if (willHitNext) {
-            groupDirection *= -1;
-            for (Invader i : invaders) {
-                if (i.canDropOnBounce()) {
-                    i.moveVertical(i.getHeight() / 5);
-                }
-            }
-        } else {
-            for (Invader i : invaders) {
-                i.update(WIDTH, 0, groupDirection, groupSpeed);
-            }
-        }
-    }
-
-    public void invaderGetsHit() {
-        for (int bul = bullets.size() - 1; bul >= 0; bul--) {
-            Bullet b = bullets.get(bul);
-            boolean consumed = false;
-            for (Invader i: invaders) {
-                if (!i.isAlive()) {
-                    continue;
-                }
-                boolean intersects = 
-                    b.getX() < i.getX() + Invader.getWidth() 
-                    && b.getX() + b.getWidth() > i.getX() 
-                    && b.getY() < i.getY() + Invader.getHeight() 
-                    && b.getY() + b.getHeight() > i.getY();
-
-                if (intersects && b.getDy() < 0) {
-                    i.kill();
-                    bullets.remove(b);
-                    consumed = true;
-                    score += 10;    
-                    break;
-                }
-            }
-        }
-        if (invaders.isEmpty()) {
-            groupSpeed += 2;
-            score += 50;
-            initializeInvaders();
-        }
-    }
-    public void enemyShoot() {
-        enemyShootTick++;
-        if (enemyShootForFrame <= enemyShootTick) {
-            enemyShootTick = 0;
-
-            int minYvalue = Integer.MAX_VALUE;
-            for (Invader inv : invaders) {
-                if (inv.getY() < minYvalue && inv.isAlive()) {
-                    minYvalue = inv.getY();
-                }
-            }
-
-            ArrayList<Invader> shooters = new ArrayList<>();
-            for (Invader inv : invaders) {
-                if (inv.isAlive() && inv.getY() == minYvalue) {
-                    shooters.add(inv);
-                }
-            }
-
-            for (Invader s : shooters) {
-                if (Math.random() < 0.2) {
-                    bullets.add(new Bullet(s.getX(), s.getY() + Invader.getHeight(), 2));
-                }
-            }
-
-        }
-    }
-
-    public void playerHit() {
-        for (int i = bullets.size() - 1; i >= 0; i--) {
-            Bullet b = bullets.get(i);
-
-            if (b.getDy() > 0 && playerAlive) {
-                boolean hitPlayer = 
-                    b.getX() < playerX + playerWidth
-                    && b.getX() + b.getWidth() > playerX
-                    && b.getY() < playerY + playerHeight
-                    && b.getY() + b.getHeight() > playerY;
-                if (hitPlayer) {
-                    playerAlive = false;
-                    bullets.remove(i);
-                }
-            }
-        }
-    }
+    
 
     @Override
     public void actionPerformed(ActionEvent e) {
@@ -288,14 +142,18 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
             b.update();
         }
 
-        willHitWall();
-        invaderGetsHit();
-        enemyShoot();
-        playerHit();
+        invaderManager.update();
+        invaderManager.checkCollision(bullets);
 
-        invaders.removeIf(inv -> !inv.isAlive());
+        if (invaderManager.checkPlayerHit(playerX, playerY, playerWidth, playerHeight)) {
+            playerAlive = false;
+        }
+
+        if (invaderManager.allDead()) {
+            invaderManager.initializeInvaders();
+        }
+
         bullets.removeIf(b -> b.getY() < 0 || b.getY() > HEIGHT);
-        
         repaint();
     }
 }

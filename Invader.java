@@ -5,8 +5,8 @@ import java.awt.image.BufferedImage;
 abstract class Invader {
     protected int x;
     protected int y;
-    protected int width = 50;
-    protected int height = 50;
+    protected static final int width = 100;
+    protected static final int height = 100;
     protected boolean alive = true;
     protected int health = 1;
     protected int shoot;
@@ -88,11 +88,11 @@ abstract class Invader {
         return this.y;
     }
 
-    public final int getHeight() {
+    public static final int getHeight() {
         return height;
     }
 
-    public final int getWidth() {
+    public static final int getWidth() {
         return width;
     }
 
