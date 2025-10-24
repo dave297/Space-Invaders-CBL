@@ -28,33 +28,36 @@ public class ShooterInvader extends Invader {
     }
 
     @Override
-    public void update(int panelWidth, int tick, int groupDirection, int groupSpeed) {
-        if (!alive) {
-            return;
-        }
-
-        int nextX = x + speed * direction;
-        if (nextX <= 0 || nextX >= panelWidth - WIDTH) {
-            hitWall = true;
-        }
-
-        moveHorizontal(direction * speed);
-
-        if (x < 0) {
-            x = 0;
-            direction *= -1;
-        }
-        if (x > panelWidth - WIDTH) {
-            x = panelWidth - WIDTH;
-            direction *= -1;
-        }
-
-        if (tick % 60 == 0 && Math.random() < 0.1) {
-            //shoot
-        }
-
-        
+public void update(int panelWidth, int tick, int groupDirection, int groupSpeed) {
+    if (!alive) {
+        return;
     }
+
+    // Move independently using the invader's own direction and speed
+    int nextX = x + speed * direction;
+    
+    // Check if hitting walls
+    if (nextX <= 0 || nextX >= panelWidth - WIDTH) {
+        direction *= -1; // Reverse direction when hitting walls
+    }
+
+    // Move with the invader's own direction and speed
+    moveHorizontal(direction * speed);
+
+    // Keep within bounds
+    if (x < 0) {
+        x = 0;
+        direction *= -1;
+    }
+    if (x > panelWidth - WIDTH) {
+        x = panelWidth - WIDTH;
+        direction *= -1;
+    }
+
+    if (tick % 60 == 0 && Math.random() < 0.1) {
+        //shoot
+    }
+}
 
     public static void reverseDirection() {
         direction *= -1;

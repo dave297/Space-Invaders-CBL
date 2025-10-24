@@ -29,7 +29,7 @@ public class Bullet {
 
 
     protected void draw(Graphics g) {
-        g.drawImage(bulletImg, x + 37, y, null);
+        g.drawImage(bulletImg, x, y, null);
     }
     
     // Getters for collision detection

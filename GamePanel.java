@@ -34,7 +34,6 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
 
     private InvaderManager invaderManager;
 
-    public GamePanel() {
     public GamePanel(Window parent) {
         this.parent = parent;
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
@@ -42,19 +41,13 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
         setFocusable(true);
         addKeyListener(this);
         invaderManager = new InvaderManager();
-        invaderManager.initializeInvaders();
-
+        // Remove the duplicate initializeInvaders() call
         URL urlBg = getClass().getResource("/Image/bground.png");
         URL urlPl = getClass().getResource("/Image/player.png");
 
         try {
             backgroundImg = ImageIO.read(urlBg);
             playerImg = ImageIO.read(urlPl);
-            invaderImg1 = ImageIO.read(urlInv1);
-            invaderImg2 = ImageIO.read(urlInv2);
-            invaderImg3 = ImageIO.read(urlInv3);
-
-
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -67,7 +60,6 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
         playerX = (WIDTH - playerWidth) / 2;
         this.timer = new Timer(15, this);
         timer.start();
-        initializeInvaders();
     }
 
     public void play(String filePath) {
@@ -116,7 +108,6 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
             g.setFont(pixelFont);
             g.setColor(Color.WHITE);
             String scoreText = "SCORE: " + invaderManager.getScore();
-            String scoreText = "SCORE: " + score;
             String availLives = "";
             if (playerLives > 0) {
                 availLives = "Lives: " + playerLives;
@@ -156,23 +147,22 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
     @Override
     public void keyPressed(KeyEvent e) {
         int key = e.getKeyCode();
+        
+        // Handle ESC key for menu (works anytime)
+        if (key == KeyEvent.VK_ESCAPE) {
+            timer.stop();
+            parent.showMenu();
+            return;
+        }
+        
         if (playerAlive) {
             if (key == KeyEvent.VK_A || key == KeyEvent.VK_LEFT) {
                 leftPressed = true;
             } else if (key == KeyEvent.VK_D || key == KeyEvent.VK_RIGHT) {
                 rightPressed = true;
             } else if (key == KeyEvent.VK_SPACE) {
-                bullets.add(new Bullet(playerX, playerY - 10, -5));
+                bullets.add(new Bullet(playerX + playerWidth/2, playerY, -10));
             }
-        
-            /*
-            I was trying to make it have some delay between each press
-            in order to preven spamming 'shot' key but i still really dont get it :)))
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e2) {
-                Thread.currentThread().interrupt();
-            }*/
         }
         if (confirmRestart && key == KeyEvent.VK_SPACE) {
             resetGame();
@@ -196,85 +186,6 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
     public void keyTyped(KeyEvent e) {}
     
     
-    public void willHitWall() {
-        boolean willHitNext = false;
-        for (Invader i : invaders) {
-            int nextLeft = i.getX() + groupDirection * groupSpeed;
-            int nextRight = nextLeft + Invader.getWidth();
-            if (nextLeft <= 0 || nextRight >= WIDTH) {
-                willHitNext = true;
-                break;
-            }
-        }
-        if (willHitNext) {
-            groupDirection *= -1;
-            for (Invader i : invaders) {
-                i.moveVertical(Invader.getHeight() / 5);
-            }
-        } else {
-            for (Invader i : invaders) {
-                i.moveHorizontal(groupDirection * groupSpeed);
-            }
-        }
-    }
-
-    public void invaderGetsHit() {
-        for (int bul = bullets.size() - 1; bul >= 0; bul--) {
-            Bullet b = bullets.get(bul);
-            boolean consumed = false;
-            for (Invader i: invaders) {
-                if (!i.isAlive()) {
-                    continue;
-                }
-                boolean intersects = 
-                    b.getX() < i.getX() + Invader.getWidth() 
-                    && b.getX() + b.getWidth() > i.getX() 
-                    && b.getY() < i.getY() + Invader.getHeight() 
-                    && b.getY() + b.getHeight() > i.getY();
-
-                if (intersects && b.getDy() < 0) {
-                    i.kill();
-                    bullets.remove(b);
-                    consumed = true;
-                    score += 10;    
-                    break;
-                }
-            }
-        }
-        if (invaders.isEmpty()) {
-            groupSpeed += 2;
-            score += 50;
-            initializeInvaders();
-        }
-    }
-    public void enemyShoot() {
-        enemyShootTick++;
-        if (enemyShootForFrame <= enemyShootTick) {
-            enemyShootTick = 0;
-
-            int minYvalue = Integer.MAX_VALUE;
-            for (Invader inv : invaders) {
-                if (inv.getY() < minYvalue && inv.isAlive()) {
-                    minYvalue = inv.getY();
-                }
-            }
-
-            ArrayList<Invader> shooters = new ArrayList<>();
-            for (Invader inv : invaders) {
-                if (inv.isAlive() && inv.getY() == minYvalue) {
-                    shooters.add(inv);
-                }
-            }
-
-            for (Invader s : shooters) {
-                if (Math.random() < 0.5) {
-                    bullets.add(new Bullet(s.getX(), s.getY() + Invader.getHeight(), 5));
-                }
-            }
-
-        }
-    }
-
     public void playerHit() {
         if (!playerAlive || invulnerable) {
             return;
@@ -290,19 +201,21 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
                     && b.getY() < playerY + playerHeight
                     && b.getY() + b.getHeight() > playerY;
                 if (hitPlayer) {
-                    playerAlive = false;
-                    respawnPlayer(playerLives);
                     playerLives--;
+                    if (playerLives > 0) {
+                        playerAlive = false;
+                        respawnPlayer(playerLives);
+                    } else {
+                        playerAlive = false;
+                        play("Music/death_sound_effect.wav");
+                        timer.stop();
+                    }
                     bullets.remove(i);
-                    
+                    break; // Exit loop after first hit
                 }
-                if (playerLives < 0) {
-                    play("Music/death_sound_effect.wav");
-                    timer.stop();
-                } 
             }
         }
-    }
+    } 
 
     public void respawnPlayer(int n) {
         if (!playerAlive && n > 0) {
@@ -343,15 +256,8 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
         }
 
         bullets.clear();
-        invaders.clear();
-        initializeInvaders();
+        invaderManager.initializeInvaders();
 
-        groupDirection = 1;
-        groupSpeed = 1;
-        dropDistance = 20;
-        enemyShootTick = 0;
-        enemyShootForFrame = 45;
-        score = 0;
         playerLives = 3;
         playerAlive = true;
         invulnerable = false;

@@ -43,12 +43,12 @@ public class InvaderManager {
     public void initializeInvaders() {
         invaders.clear();
         
-        if (score < 150) {
+        if (score < 300) {
             createDefaultInvaders();
-        } else if (score < 300) {
+        } else if (score < 500) {
             createDefaultInvaders();
             createShooterInvaders();
-        } else if (score < 500) {
+        } else if (score < 1000) {
             createDefaultInvaders();
             createShooterInvaders();
             createTankInvaders();
