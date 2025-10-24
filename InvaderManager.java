@@ -2,7 +2,10 @@ import java.awt.*;
 import java.awt.image.*;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Random;
+
 import javax.imageio.ImageIO;
+import java.util.random.RandomGenerator;
 
 public class InvaderManager {
     private ArrayList<Invader> invaders = new ArrayList<>();
@@ -99,9 +102,16 @@ public class InvaderManager {
     }
 
     private void createDiverInvaders() {
-        invaders.add(new DiverInvader(100, 300));
-        invaders.add(new DiverInvader(100, 500));
+        Random rand = new Random();
+        int max = 300;
+        int min = 100;
 
+        for (int i = 0; i < 5; i++) {
+            int random = rand.nextInt( (max - min) + 1) + min;
+            invaders.add(new DiverInvader( random, 300));
+            min = max + 100;
+            max += 200;
+        }
     }
 
     public void update() {
