@@ -5,7 +5,7 @@ public class Window extends JFrame {
 
     private final CardLayout cardLayout = new CardLayout(); 
     private final JPanel root = new JPanel(cardLayout);
-    private GamePanel gamePanel = new GamePanel();
+    private GamePanel gamePanel = new GamePanel(this);
     private GameMenu gameMenu;
 
 
@@ -26,15 +26,28 @@ public class Window extends JFrame {
     }
 
     public void startGame() {
-        gamePanel = new GamePanel();
+        root.remove(gamePanel);
+        gamePanel = new GamePanel(this);
         root.add(gamePanel, "game");
         cardLayout.show(root, "game");
+        root.validate();
+        root.repaint();
         SwingUtilities.invokeLater(() -> gamePanel.requestFocusInWindow());
         //System.out.println("I'm working");
+        
+    }
+
+    public void showMenu() {
+        cardLayout.show(root, "menu");
         root.validate();
+        root.repaint();
+        SwingUtilities.invokeLater(() -> root.requestFocusInWindow());
     }
     
     public static void main(String[] args) {
         Window a = new Window();
+        GamePanel b = new GamePanel(a);
+        b.play("Music/A _Lonely_Cherry_Tree.wav");
+        b.loop();
     }
 }

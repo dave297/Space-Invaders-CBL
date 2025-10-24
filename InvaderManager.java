@@ -16,7 +16,7 @@ public class InvaderManager {
     private int fireRate = 45;
     private int score = 0;
     private final int WIDTH = 1200;
-    private final int HEIGHT = 600;
+    private final int HEIGHT = 800;
 
     private BufferedImage defaultInvaderIMG;
     private BufferedImage tankInvaderIMG;
@@ -34,11 +34,6 @@ public class InvaderManager {
             diverInvaderIMG = ImageIO.read(getClass().getResource("/Image/InvaderBLUE.png"));
             shooterInvaderIMG = ImageIO.read(getClass().getResource("/Image/InvaderPURPLE.png"));
             
-            System.out.println("Images loaded:");
-            System.out.println("Default: " + (defaultInvaderIMG != null));
-            System.out.println("Tank: " + (tankInvaderIMG != null));
-            System.out.println("Diver: " + (diverInvaderIMG != null));
-            System.out.println("Shooter: " + (shooterInvaderIMG != null));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -93,9 +88,9 @@ public class InvaderManager {
 
     private void createTankInvaders() {
         
-        int y = 250;
-        for (int i = 0; i < 5; i++) {
-            int x = 200 + i * 150;
+        int y = 350;
+        for (int i = 0; i < 7; i++) {
+            int x = 110 + i * 100;
             
             invaders.add(new TankInvader(x, y));
         }
@@ -108,7 +103,7 @@ public class InvaderManager {
 
         for (int i = 0; i < 5; i++) {
             int random = rand.nextInt( (max - min) + 1) + min;
-            invaders.add(new DiverInvader( random, 300));
+            invaders.add(new DiverInvader( random, 450));
             min = max + 100;
             max += 200;
         }
@@ -204,7 +199,9 @@ public class InvaderManager {
                     if (invader.isAlive() && isColliding(bullet, invader)) {
                         invader.takeHit();
                         playerBullets.remove(i);
-                        score += 10;
+                        if (!invader.isAlive()) {
+                            score += 10;
+                        }
                         break;
                     }
                 }

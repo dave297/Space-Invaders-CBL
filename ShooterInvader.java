@@ -3,6 +3,10 @@ import java.awt.image.BufferedImage;
 
 public class ShooterInvader extends Invader {
 
+    private static int direction = 1;
+    private static final int speed = 1;
+    private static boolean hitWall = false;
+
     public ShooterInvader(int startX, int startY) {
         super(startX, startY);
     }
@@ -14,13 +18,13 @@ public class ShooterInvader extends Invader {
             return;
         }
         if (img != null) {
-            g.drawImage(img, x, y, width, height, null);
+            g.drawImage(img, x, y, WIDTH, HEIGHT, null);
         } else {
             g.setColor(Color.ORANGE);
-            g.fillRect(x, y, width, height);
+            g.fillRect(x, y, WIDTH, HEIGHT);
             g.setColor(Color.WHITE);
             g.drawString("Shooter", x, y);
-        }
+        }   
     }
 
     @Override
@@ -29,19 +33,36 @@ public class ShooterInvader extends Invader {
             return;
         }
 
-        moveHorizontal(groupDirection * groupSpeed);
+        int nextX = x + speed * direction;
+        if (nextX <= 0 || nextX >= panelWidth - WIDTH) {
+            hitWall = true;
+        }
+
+        moveHorizontal(direction * speed);
 
         if (x < 0) {
             x = 0;
+            direction *= -1;
         }
-        if (x > panelWidth - width) {
-            x = panelWidth - width;
+        if (x > panelWidth - WIDTH) {
+            x = panelWidth - WIDTH;
+            direction *= -1;
         }
 
         if (tick % 60 == 0 && Math.random() < 0.1) {
             //shoot
         }
+
+        
     }
+
+    public static void reverseDirection() {
+        direction *= -1;
+    }
+
+    public static boolean shooterHitWall() {
+        return hitWall;
+    } 
 
     @Override
     public boolean canShoot() {

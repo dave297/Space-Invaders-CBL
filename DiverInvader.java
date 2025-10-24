@@ -3,7 +3,7 @@ import java.awt.image.BufferedImage;
 
 public class DiverInvader extends Invader {
     private long creationTime;
-    private final int DELAY_MS = 500;
+    private final int DELAY_MS = 750;
     private boolean timingInit = false;
     private long lastVibration = 0;
     private final long VIBRATION_DURATION = 100;
@@ -38,12 +38,11 @@ public class DiverInvader extends Invader {
                 lastVibration = currentTime;
             }
 
-
             return;
         }
-        moveVertical(4);
+        moveVertical(7);
 
-        if (y > 600) {
+        if (y > PANEL_HEIGHT - 50) {
             alive = false;
         }
     }
@@ -54,10 +53,10 @@ public class DiverInvader extends Invader {
             return;
         }
         if (img != null) {
-            g.drawImage(img, x, y, width, height, null);
+            g.drawImage(img, x, y, WIDTH, HEIGHT, null);
         } else { 
             g.setColor(Color.ORANGE);
-            g.fillRect(x, y, width, height);
+            g.fillRect(x, y, WIDTH, HEIGHT);
             g.setColor(Color.WHITE);
             g.drawString("Diver", x, y);
         }
