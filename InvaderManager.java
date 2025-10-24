@@ -5,15 +5,14 @@ import java.util.ArrayList;
 import java.util.Random;
 
 import javax.imageio.ImageIO;
-import java.util.random.RandomGenerator;
 
 public class InvaderManager {
-    private ArrayList<Invader> invaders = new ArrayList<>();
-    private ArrayList<Bullet> enemyBullets = new ArrayList<>();
+    private final ArrayList<Invader> invaders = new ArrayList<>();
+    private final ArrayList<Bullet> enemyBullets = new ArrayList<>();
     private int groupDirection = 1;
-    private int groupSpeed = 2;
+    private final int groupSpeed = 2;
     private int shootTick = 0;
-    private int fireRate = 45;
+    private final int fireRate = 45;
     private int score = 0;
     private final int WIDTH = 1200;
     private final int HEIGHT = 800;
