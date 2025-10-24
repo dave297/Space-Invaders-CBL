@@ -3,6 +3,7 @@ import java.awt.image.BufferedImage;
 
 public class TankInvader extends Invader{
 
+    int health = 3;
     public TankInvader(int startX, int startY) {
         super(startX, startY);
     }
@@ -22,10 +23,10 @@ public class TankInvader extends Invader{
         }
 
         if (img != null) {
-            g.drawImage(img, x, y, width, height, null);
+            g.drawImage(img, x, y, WIDTH, HEIGHT, null);
         } else {
             g.setColor(Color.ORANGE);
-            g.fillRect(x, y, width, height);
+            g.fillRect(x, y, WIDTH, HEIGHT);
             g.setColor(Color.WHITE);
             g.drawString("Tank", x, y);
         }
@@ -42,8 +43,8 @@ public class TankInvader extends Invader{
         if (x < 0) {
             x = 0;
         }
-        if (x > panelWidth - width) {
-            x = panelWidth - width;
+        if (x > panelWidth - WIDTH) {
+            x = panelWidth - HEIGHT;
         }
     }
     

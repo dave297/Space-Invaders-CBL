@@ -2,7 +2,10 @@ import java.awt.*;
 import java.awt.image.*;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Random;
+
 import javax.imageio.ImageIO;
+import java.util.random.RandomGenerator;
 
 public class InvaderManager {
     private ArrayList<Invader> invaders = new ArrayList<>();
@@ -12,8 +15,9 @@ public class InvaderManager {
     private int shootTick = 0;
     private int fireRate = 45;
     private int score = 0;
+    private int scoreCheck = 0;
     private final int WIDTH = 1200;
-    private final int HEIGHT = 600;
+    private final int HEIGHT = 800;
 
     private BufferedImage defaultInvaderIMG;
     private BufferedImage tankInvaderIMG;
@@ -31,11 +35,6 @@ public class InvaderManager {
             diverInvaderIMG = ImageIO.read(getClass().getResource("/Image/InvaderBLUE.png"));
             shooterInvaderIMG = ImageIO.read(getClass().getResource("/Image/InvaderPURPLE.png"));
             
-            System.out.println("Images loaded:");
-            System.out.println("Default: " + (defaultInvaderIMG != null));
-            System.out.println("Tank: " + (tankInvaderIMG != null));
-            System.out.println("Diver: " + (diverInvaderIMG != null));
-            System.out.println("Shooter: " + (shooterInvaderIMG != null));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -43,13 +42,13 @@ public class InvaderManager {
 
     public void initializeInvaders() {
         invaders.clear();
-
+        
         if (score < 150) {
             createDefaultInvaders();
-        } else if (score < 100) {
+        } else if (score < 300) {
             createDefaultInvaders();
             createShooterInvaders();
-        } else if (score < 100) {
+        } else if (score < 500) {
             createDefaultInvaders();
             createShooterInvaders();
             createTankInvaders();
@@ -59,6 +58,7 @@ public class InvaderManager {
             createShooterInvaders();
             createTankInvaders();
         }
+        
     }
 
     private void createDefaultInvaders() {
@@ -90,18 +90,25 @@ public class InvaderManager {
 
     private void createTankInvaders() {
         
-        int y = 250;
-        for (int i = 0; i < 5; i++) {
-            int x = 200 + i * 150;
+        int y = 350;
+        for (int i = 0; i < 8; i++) {
+            int x = 110 + i * 100;
             
             invaders.add(new TankInvader(x, y));
         }
     }
 
     private void createDiverInvaders() {
-        invaders.add(new DiverInvader(100, 300));
-        invaders.add(new DiverInvader(100, 500));
+        Random rand = new Random();
+        int max = 300;
+        int min = 100;
 
+        for (int i = 0; i < 5; i++) {
+            int random = rand.nextInt( (max - min) + 1) + min;
+            invaders.add(new DiverInvader( random, 450));
+            min = max + 100;
+            max += 200;
+        }
     }
 
     public void update() {
@@ -115,7 +122,8 @@ public class InvaderManager {
         for (Bullet bullet : enemyBullets) {
             bullet.update();
         }
-
+        
+        handleShooterMovement();
         handleGroupMovement();
         handleEnemyShooting();
         
@@ -123,10 +131,16 @@ public class InvaderManager {
         enemyBullets.removeIf(bullet -> bullet.getY() > HEIGHT);
     }
 
+    private void handleShooterMovement() {
+        if (ShooterInvader.shooterHitWall()) {
+            ShooterInvader.reverseDirection();
+        }
+    }
+
     private void handleGroupMovement() {
         boolean willHitWall = false;
         for (Invader invader : invaders) {
-            if (invader.isAlive()) {
+            if (invader.isAlive() && !(invader instanceof ShooterInvader)) {
                 int nextX = invader.getX() + groupSpeed * groupDirection;
                 if (nextX <= 0 || nextX + invader.getWidth() >= WIDTH) {
                     willHitWall = true;
@@ -194,7 +208,17 @@ public class InvaderManager {
                     if (invader.isAlive() && isColliding(bullet, invader)) {
                         invader.takeHit();
                         playerBullets.remove(i);
-                        score += 10;
+                        if (!invader.isAlive()) {
+                            score += 10;
+                            if (score % 100 == 0 && score > 0) {
+                                scoreCheck += 1;
+                            }
+                            if (scoreCheck == 5) {
+                            scoreCheck = 0;
+                            groupSpeed += 1;
+                            System.out.println(groupSpeed);
+                            }
+                        }
                         break;
                     }
                 }

@@ -13,17 +13,16 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
     private BufferedImage backgroundImg;  
     private BufferedImage playerImg; 
     public static final int WIDTH = 1200;
-    public static final int HEIGHT = 600;
+    public static final int HEIGHT = 800;
     private int playerX;
     private boolean playerAlive = true;
-    private static final int playerY = 500;
+    private static final int playerY = HEIGHT - 100;
     private final int playerWidth = 444 / 5;
     private final int playerHeight = 432 / 5;
     private Timer timer;
     private boolean leftPressed = false;
     private boolean rightPressed = false;
     private ArrayList<Bullet> bullets = new ArrayList<>();
-    private int score = 0;
     private Font pixelFont;
 
     private InvaderManager invaderManager;
@@ -150,6 +149,7 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
         }
 
         if (invaderManager.allDead()) {
+            bullets.removeAll(bullets);
             invaderManager.initializeInvaders();
         }
 

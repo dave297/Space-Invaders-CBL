@@ -28,7 +28,7 @@ public class DefaultInvader extends Invader{
         int drawY = this.y;
 
         if (img != null) {
-            g.drawImage(img, drawX, drawY, width, height, null);
+            g.drawImage(img, drawX, drawY, WIDTH, HEIGHT, null);
         } else {
             g.setColor(Color.DARK_GRAY);
             g.fillRect(0, 0, getWidth(), getHeight());
@@ -47,8 +47,8 @@ public class DefaultInvader extends Invader{
         if (x < 0) {
             x = 0;
         }
-        if (x > panelWidth - width) {
-            x = panelWidth - width;
+        if (x > panelWidth - WIDTH) {
+            x = panelWidth - HEIGHT;
         }
     }
 }

@@ -2,6 +2,13 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 
 public class DiverInvader extends Invader {
+    private long creationTime;
+    private final int DELAY_MS = 1500;
+    private boolean timingInit = false;
+    private long lastVibration = 0;
+    private final long VIBRATION_DURATION = 100;
+    private boolean vibrateDirection = true;
+
     public DiverInvader(int startX, int startY) {
         super(startX, startY);
     }
@@ -12,9 +19,31 @@ public class DiverInvader extends Invader {
             return;
         }
 
-        moveVertical(2);
+        if (!timingInit) {
+            creationTime = System.currentTimeMillis();
+            timingInit = true;
+            return;
+        }
+        long currentTime = System.currentTimeMillis();
 
-        if (y > 600) {
+        if (currentTime - creationTime < DELAY_MS) {
+            if (currentTime - lastVibration >= VIBRATION_DURATION) {
+                if (vibrateDirection) {
+                    moveHorizontal(4);
+                    vibrateDirection = false;
+                } else {
+                    moveHorizontal(-4);
+                    vibrateDirection = true;
+                }
+                lastVibration = currentTime;
+            }
+
+
+            return;
+        }
+        moveVertical(7);
+
+        if (y > PANEL_HEIGHT - 50) {
             alive = false;
         }
     }
@@ -25,10 +54,10 @@ public class DiverInvader extends Invader {
             return;
         }
         if (img != null) {
-            g.drawImage(img, x, y, width, height, null);
+            g.drawImage(img, x, y, WIDTH, HEIGHT, null);
         } else { 
             g.setColor(Color.ORANGE);
-            g.fillRect(x, y, width, height);
+            g.fillRect(x, y, WIDTH, HEIGHT);
             g.setColor(Color.WHITE);
             g.drawString("Diver", x, y);
         }
