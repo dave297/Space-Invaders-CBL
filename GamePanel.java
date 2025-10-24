@@ -12,27 +12,17 @@ import javax.swing.*;
 public class GamePanel extends JPanel implements KeyListener, ActionListener {
     private BufferedImage backgroundImg;  
     private BufferedImage playerImg; 
-    private BufferedImage invaderImg1;
-    private BufferedImage invaderImg2;
-    private BufferedImage invaderImg3;
     public static final int WIDTH = 1200;
-    public static final int HEIGHT = 600;
+    public static final int HEIGHT = 800;
     private int playerX;
     private boolean playerAlive = true;
-    private static final int playerY = 500;
+    private static final int playerY = HEIGHT - 100;
     private final int playerWidth = 444 / 5;
     private final int playerHeight = 432 / 5;
     private Timer timer;
     private boolean leftPressed = false;
     private boolean rightPressed = false;
     private ArrayList<Bullet> bullets = new ArrayList<>();
-    private ArrayList<Invader> invaders = new ArrayList<>();
-    private int groupDirection = 1;
-    private int groupSpeed = 1;
-    private int dropDistance = 20;
-    private int enemyShootTick = 0;
-    private int enemyShootForFrame = 45;
-    private int score = 0;
     private Font pixelFont;
     private int playerLives = 3;
     private boolean isVisible = true;
@@ -42,18 +32,20 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
     private final Window parent;
     private Clip clip;
 
+    private InvaderManager invaderManager;
+
+    public GamePanel() {
     public GamePanel(Window parent) {
         this.parent = parent;
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
         setDoubleBuffered(true);
         setFocusable(true);
         addKeyListener(this);
+        invaderManager = new InvaderManager();
+        invaderManager.initializeInvaders();
 
         URL urlBg = getClass().getResource("/Image/bground.png");
         URL urlPl = getClass().getResource("/Image/player.png");
-        URL urlInv1 = getClass().getResource("/Image/Ship/png/ship(3).png");
-        URL urlInv2 = getClass().getResource("/Image/Ship/png/ship (7).png");
-        URL urlInv3 = getClass().getResource("/Image/Ship/png/ship (10).png");
 
         try {
             backgroundImg = ImageIO.read(urlBg);
@@ -100,44 +92,7 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
 
     }
 
-    public void initializeInvaders() {
-        int rows = 3;
-        int columns = 8;
-        int spacingX = 80;
-        int spacingY = 60;
-        int startX = 50;
-        int startY = 50;
 
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < columns; j++) {
-                int x = startX + j * spacingX;
-                int y = startY + i * spacingY;
-                int type = (i % 3) + 1;
-                invaders.add(new Invader(x, y, type));
-            }
-        }
-    }
-
-    public void paintInvaders(Graphics g) {
-        for (Invader i : invaders) {
-            if (!i.isAlive()) {
-                continue;
-            }
-            BufferedImage img = null;
-            switch (i.getType()) {
-                case 1: img = invaderImg1;
-                break;
-                case 2: img = invaderImg2; 
-                break;
-                case 3: img = invaderImg3;
-                break;
-                default: 
-                    img = invaderImg1;
-                    break;
-            }
-            i.draw(g, img);
-        }
-    }
 
     @Override
     protected void paintComponent(Graphics g) {
@@ -151,11 +106,16 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
             for (Bullet b: bullets) {
                 b.draw(g);
             }
-
-            paintInvaders(g);
             
+            invaderManager.draw(g);
+
+            for (Bullet b : invaderManager.getEnemyBullets()) {
+                b.draw(g);
+            }
+
             g.setFont(pixelFont);
             g.setColor(Color.WHITE);
+            String scoreText = "SCORE: " + invaderManager.getScore();
             String scoreText = "SCORE: " + score;
             String availLives = "";
             if (playerLives > 0) {
@@ -173,6 +133,8 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
             g.setColor(Color.WHITE);
             g.drawString("Unable to load", 20, 20);
         }
+
+
         if (playerLives < 0) {
             String lose = "GAME OVER! PRESS 'SPACE' TO RESTART.";
             String giveUp = "PRESS 'ESC' TO MENU.";
@@ -232,6 +194,7 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
 
     @Override
     public void keyTyped(KeyEvent e) {}
+    
     
     public void willHitWall() {
         boolean willHitNext = false;
@@ -419,14 +382,19 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
             b.update();
         }
 
-        willHitWall();
-        invaderGetsHit();
-        enemyShoot();
-        playerHit();
+        invaderManager.update();
+        invaderManager.checkCollision(bullets);
 
-        invaders.removeIf(inv -> !inv.isAlive());
+        if (invaderManager.checkPlayerHit(playerX, playerY, playerWidth, playerHeight)) {
+            playerAlive = false;
+        }
+
+        if (invaderManager.allDead()) {
+            bullets.removeAll(bullets);
+            invaderManager.initializeInvaders();
+        }
+
         bullets.removeIf(b -> b.getY() < 0 || b.getY() > HEIGHT);
-        
         repaint();
     }
 }
