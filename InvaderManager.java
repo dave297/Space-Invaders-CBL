@@ -3,13 +3,11 @@ import java.awt.image.*;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Random;
-
 import javax.imageio.ImageIO;
-import java.util.random.RandomGenerator;
 
 public class InvaderManager {
-    private ArrayList<Invader> invaders = new ArrayList<>();
-    private ArrayList<Bullet> enemyBullets = new ArrayList<>();
+    private final ArrayList<Invader> invaders = new ArrayList<>();
+    private final ArrayList<Bullet> enemyBullets = new ArrayList<>();
     private int groupDirection = 1;
     private int groupSpeed = 2;
     private int shootTick = 0;
@@ -104,8 +102,8 @@ public class InvaderManager {
         int min = 100;
 
         for (int i = 0; i < 5; i++) {
-            int random = rand.nextInt( (max - min) + 1) + min;
-            invaders.add(new DiverInvader( random, 450));
+            int random = rand.nextInt((max - min) + 1) + min;
+            invaders.add(new DiverInvader(random, 450));
             min = max + 100;
             max += 200;
         }
@@ -165,9 +163,9 @@ public class InvaderManager {
             shootTick = 0;
         
             for (Invader invader : invaders) {
-                if (invader.isAlive() && invader.canShoot() && Math.random() < 0.3) {
+                if (invader.isAlive() && invader.canShoot() && Math.random() < 0.4) {
                     enemyBullets.add(new Bullet(invader.getX(), 
-                        invader.getY() + invader.getWidth(), 2));
+                        invader.getY() + invader.getWidth(), 8));
                 }
             }
         }
@@ -214,9 +212,9 @@ public class InvaderManager {
                                 scoreCheck += 1;
                             }
                             if (scoreCheck == 5) {
-                            scoreCheck = 0;
-                            groupSpeed += 1;
-                            System.out.println(groupSpeed);
+                                scoreCheck = 0;
+                                groupSpeed += 1;
+                                System.out.println(groupSpeed);
                             }
                         }
                         break;
@@ -229,7 +227,7 @@ public class InvaderManager {
     public boolean checkPlayerHit(int playerX, int playerY, int playerWidth, int playerHeight) {
         for (Invader invader : invaders) {
             if (invader.isAlive() && enemyHitsPlayer(invader, 
-                playerX, playerY, playerHeight, playerWidth)) {
+                playerX, playerY, playerWidth, playerHeight)) {
                 return true;
             }
         }
@@ -276,5 +274,19 @@ public class InvaderManager {
 
     public boolean allDead() {
         return invaders.isEmpty();
+    }
+
+    public void reset() {
+        invaders.clear();
+        enemyBullets.clear();
+
+        groupDirection = 1;
+        groupSpeed = 2;  
+        shootTick = 0;
+        fireRate = 45;  
+        score = 0;
+        scoreCheck = 0;
+
+        initializeInvaders(); 
     }
 }

@@ -1,26 +1,36 @@
 import java.awt.*;
 import java.awt.image.*;
 import java.io.IOException;
-import java.net.URL;
 import javax.imageio.ImageIO;
 
 public class Bullet {
-    private BufferedImage bulletImg;
-    private int x;
+    private static BufferedImage PLAYER_BULLET_IMG;
+    private static BufferedImage INVADER_BULLET_IMG;
+    private final BufferedImage bulletImg;
+    private final int x;
     private int y;
-    private int dy;
+    private final int dy;
+
+    static {
+        try {
+            PLAYER_BULLET_IMG = ImageIO.read(Bullet.class.getResource("/Image/bullet.png"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        try {
+            INVADER_BULLET_IMG = 
+            ImageIO.read(Bullet.class.getResource("/Image/invaders_bullet.png"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
     
     public Bullet(int startX, int startY, int dy) {
-        URL urlBl = getClass().getResource("/Image/bullet.png");
         this.x = startX;
         this.y = startY;
         this.dy = dy;
-        try {
-            bulletImg = ImageIO.read(urlBl);
-        } catch (IOException e) {
-            e.printStackTrace();
-            
-        }
+        this.bulletImg = 
+            (dy > 0 && INVADER_BULLET_IMG != null) ? INVADER_BULLET_IMG : PLAYER_BULLET_IMG;
     }
 
     public void update() {
@@ -37,7 +47,7 @@ public class Bullet {
         return x + 37; 
     } // Account for the offset in drawing
 
-    public int getY(){
+    public int getY() {
         return y; 
     }
 
