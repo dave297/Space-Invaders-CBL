@@ -1,11 +1,16 @@
 import java.awt.*;
 import java.awt.image.BufferedImage;
 
+/**
+ * A specialized Invader that moves independently and can shoot at the player.
+ * This invader type adds ranged threat to the enemy formation while
+ * operating with more tactical independence than standard invaders.
+ */
 public class ShooterInvader extends Invader {
 
     private static int direction = 1;
-    private static final int speed = 1;
-    private static boolean hitWall = false;
+    private static final int SPEED = 1;
+    private static final boolean HITWALL = false;
 
     public ShooterInvader(int startX, int startY) {
         super(startX, startY);
@@ -34,7 +39,7 @@ public class ShooterInvader extends Invader {
         }
 
         // Move independently using the invader's own direction and speed
-        int nextX = x + speed * direction;
+        int nextX = x + SPEED * direction;
     
         // Check if hitting walls
         if (nextX <= 0 || nextX >= panelWidth - WIDTH) {
@@ -42,7 +47,7 @@ public class ShooterInvader extends Invader {
         }
 
         // Move with the invader's own direction and speed
-        moveHorizontal(direction * speed);
+        moveHorizontal(direction * SPEED);
 
         // Keep within bounds
         if (x < 0) {
@@ -61,7 +66,7 @@ public class ShooterInvader extends Invader {
     }
 
     public static boolean shooterHitWall() {
-        return hitWall;
+        return HITWALL;
     } 
 
     @Override

@@ -1,6 +1,11 @@
 import java.awt.*;
 import java.awt.image.BufferedImage;
 
+/**
+ * The basic invader type that moves in formation with simple behavior.
+ * This invader type forms the backbone of the enemy formations and
+ * provides the baseline behavior that other invader types extend.
+ */
 public class DefaultInvader extends Invader {
 
     public DefaultInvader(int startX, int startY) {

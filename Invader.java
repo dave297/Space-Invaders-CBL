@@ -18,6 +18,9 @@ abstract class Invader {
     protected HealthModel healthModel;
     protected ShootingBehaviour shooting;
 
+    /**
+     * Starting position of invaders.
+     */
     public Invader(int startX, int startY) {
         this.x = startX;
         this.y = startY;
@@ -35,12 +38,27 @@ abstract class Invader {
     }
 
     public interface ShootingBehaviour {
+        /**
+         * Called each tick to give this behaviour a chance to fire.
+         * Implementations should create projectiles or otherwise trigger
+         * shooting using the provided invader as context.
+         *
+         * @param self the invader attempting to shoot
+         * @param tick the current game tick or frame counter
+         */
         void maybeShoot(Invader self, int tick);
         
         default boolean canShoot() {
             return false;
         }
         
+        /**
+         * Probability (0.0 - 1.0) that this invader will attempt to shoot
+         * on a given tick. Used by higher-level logic to decide shooting.
+         * Default is 0.0 (never).
+         *
+         * @return the probability of shooting on a tick
+         */
         default double probability() {
             return 0.0;
         }
@@ -50,12 +68,17 @@ abstract class Invader {
         void applyDamage(int amount);
 
         boolean isAlive();
-        
-        int currentHealth(); 
+
+        int currentHealth();
     }
     
     public abstract void draw(Graphics g, BufferedImage image);
 
+    /**
+     * Apply a single hit to this invader. If a HealthModel is attached,
+     * damage is delegated to it; otherwise the invader is killed immediately.
+     * If health reaches zero the invader's alive flag is set to false.
+     */
     public void takeHit() {
         if (healthModel != null) {
             healthModel.applyDamage(1);
@@ -67,6 +90,13 @@ abstract class Invader {
         }
     }
 
+
+    /**
+     * Return the current configured shoot probability for this invader.
+     * If no ShootingBehaviour is set, returns 0.0.
+     *
+     * @return shooting probability in range [0.0, 1.0]
+     */
     public double getShootProbability() {
         if (shooting != null) {
             return shooting.probability();
@@ -101,7 +131,7 @@ abstract class Invader {
     public final boolean isAlive() {
         return alive;
     }
-
+    
     public final void kill() {
         alive = false;
     }

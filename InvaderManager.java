@@ -5,42 +5,55 @@ import java.util.ArrayList;
 import java.util.Random;
 import javax.imageio.ImageIO;
 
+/**
+ * Manages all invader entities and their behaviors as a group.
+ */
 public class InvaderManager {
     private final ArrayList<Invader> invaders = new ArrayList<>();
     private final ArrayList<Bullet> enemyBullets = new ArrayList<>();
+
     private int groupDirection = 1;
     private int groupSpeed = 2;
+
     private int shootTick = 0;
     private int fireRate = 45;
+
     private int score = 0;
     private int scoreCheck = 0;
-    private final int WIDTH = 1200;
-    private final int HEIGHT = 800;
+
+    private static final int WIDTH = 1200;
+    private static final int HEIGHT = 800;
 
     private BufferedImage defaultInvaderIMG;
     private BufferedImage tankInvaderIMG;
     private BufferedImage diverInvaderIMG;
     private BufferedImage shooterInvaderIMG;
 
-    public InvaderManager() {
-        loadImages();
-    }
-
+    /**
+     * Loads sprite images from the classpath for all invader variants.
+     */
     private void loadImages() {
         try {
             defaultInvaderIMG = ImageIO.read(getClass().getResource("/Image/InvaderGREEN.png"));
             tankInvaderIMG = ImageIO.read(getClass().getResource("/Image/InvaderRED.png"));
             diverInvaderIMG = ImageIO.read(getClass().getResource("/Image/InvaderBLUE.png"));
             shooterInvaderIMG = ImageIO.read(getClass().getResource("/Image/InvaderPURPLE.png"));
-            
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
+    public InvaderManager() {
+        loadImages();
+    }
+
+    /**
+     * Builds a new wave of invaders based on the current.
+     * Clears existing invaders first, then mixes types as difficulty scales.
+     */
     public void initializeInvaders() {
         invaders.clear();
-        
+
         if (score < 300) {
             createDefaultInvaders();
         } else if (score < 500) {
@@ -56,9 +69,11 @@ public class InvaderManager {
             createShooterInvaders();
             createTankInvaders();
         }
-        
     }
 
+    /**
+     * Adds a grid of default invaders near the top of the screen.
+     */
     private void createDefaultInvaders() {
         int rows = 2;
         int columns = 8;
@@ -71,13 +86,14 @@ public class InvaderManager {
             for (int j = 0; j < columns; j++) {
                 int x = startX + j * spacingX;
                 int y = startY + i * spacingY;
-
                 invaders.add(new DefaultInvader(x, y));
             }
         }
-
     }
 
+    /**
+     * Adds a line of shooter invaders that can fire at the player.
+     */
     private void createShooterInvaders() {
         int y = 30;
         for (int i = 0; i < 5; i++) {
@@ -86,16 +102,20 @@ public class InvaderManager {
         }
     }
 
+    /**
+     * Adds a row of tank invaders with multiple hit points.
+     */
     private void createTankInvaders() {
-        
         int y = 350;
         for (int i = 0; i < 8; i++) {
             int x = 110 + i * 100;
-            
             invaders.add(new TankInvader(x, y));
         }
     }
 
+    /**
+     * Adds several diver invaders at random spaced X positions further down the field.
+     */
     private void createDiverInvaders() {
         Random rand = new Random();
         int max = 300;
@@ -109,8 +129,12 @@ public class InvaderManager {
         }
     }
 
+    /**
+     * Updates invaders and enemy bullets, applies group movement rules and shooting,
+     * then prunes dead invaders and off-screen bullets.
+     * Call once per frame from the game loop.
+     */
     public void update() {
-
         for (Invader invader : invaders) {
             if (invader.isAlive()) {
                 invader.update(WIDTH, 0, groupDirection, groupSpeed);
@@ -120,11 +144,11 @@ public class InvaderManager {
         for (Bullet bullet : enemyBullets) {
             bullet.update();
         }
-        
+
         handleShooterMovement();
         handleGroupMovement();
         handleEnemyShooting();
-        
+
         invaders.removeIf((invader -> !invader.isAlive()));
         enemyBullets.removeIf(bullet -> bullet.getY() > HEIGHT);
     }
@@ -135,6 +159,10 @@ public class InvaderManager {
         }
     }
 
+    /**
+     * Computes whether the next group step will hit a wall, flips direction if needed,
+     * and optionally drops invaders vertically on bounce according to each type's rule.
+     */
     private void handleGroupMovement() {
         boolean willHitWall = false;
         for (Invader invader : invaders) {
@@ -157,47 +185,64 @@ public class InvaderManager {
         }
     }
 
+    /**
+     * Triggers enemy shots at a fixed tick cadence based on {@link #fireRate}.
+     * For each shooter-capable invader, fires a bullet downward with a simple probability test.
+     */
     private void handleEnemyShooting() {
         shootTick++;
         if (fireRate <= shootTick) {
             shootTick = 0;
-        
+
             for (Invader invader : invaders) {
                 if (invader.isAlive() && invader.canShoot() && Math.random() < 0.4) {
-                    enemyBullets.add(new Bullet(invader.getX(), 
-                        invader.getY() + invader.getWidth(), 8));
+                    enemyBullets.add(new Bullet(
+                        invader.getX(),
+                        invader.getY() + invader.getWidth(), 
+                        // uses width as height offset for sprite bottom
+                        8
+                    ));
                 }
             }
         }
     }
 
+    /**
+     * Draws all invaders using their specific sprite where available, 
+     * or falls back to shape rendering.
+     */
     public void draw(Graphics g) {
-    
         for (Invader invader : invaders) {
-            //if (!invader.isAlive()) continue;
-                
             BufferedImage img = getInvaderImage(invader);
             if (img == null) {
                 System.out.println("Image is null for " + invader.getClass().getSimpleName());
             }
-        
             invader.draw(g, img);
         }
     }
 
+    /**
+     * Returns the sprite image for the given invader type.
+     * @return the corresponding sprite
+     */
     private BufferedImage getInvaderImage(Invader invader) {
         if (invader instanceof DefaultInvader) {
             return defaultInvaderIMG;
         } else if (invader instanceof TankInvader) {
             return tankInvaderIMG;
-        } else if (invader instanceof  DiverInvader) {
+        } else if (invader instanceof DiverInvader) {
             return diverInvaderIMG;
-        } else if (invader instanceof  ShooterInvader) {
+        } else if (invader instanceof ShooterInvader) {
             return shooterInvaderIMG;
         }
         return defaultInvaderIMG;
     }
 
+    /**
+     * Checks collisions between player bullets and invaders.
+     * Removes collided player bullets, applies damage, 
+     * awards score on kills, and increases difficulty periodically.
+     */
     public void checkCollision(ArrayList<Bullet> playerBullets) {
         for (int i  = playerBullets.size() - 1; i >= 0; i--) {
             Bullet bullet = playerBullets.get(i);
@@ -224,9 +269,14 @@ public class InvaderManager {
         }
     }
 
+    /**
+     * Determines whether the player has been hit either by a colliding invader 
+     * or by an enemy bullet.
+     * Enemy bullets are removed when they hit the player.
+     */
     public boolean checkPlayerHit(int playerX, int playerY, int playerWidth, int playerHeight) {
         for (Invader invader : invaders) {
-            if (invader.isAlive() && enemyHitsPlayer(invader, 
+            if (invader.isAlive() && enemyHitsPlayer(invader,
                 playerX, playerY, playerWidth, playerHeight)) {
                 return true;
             }
@@ -234,7 +284,7 @@ public class InvaderManager {
 
         for (int i = enemyBullets.size() - 1; i >= 0; i--) {
             Bullet bullet = enemyBullets.get(i);
-            if (bullet.getDy() > 0 
+            if (bullet.getDy() > 0
                 && bulletHitsPlayer(bullet, playerX, playerY, playerHeight, playerWidth)) {
                 enemyBullets.remove(i);
                 return true;
@@ -243,6 +293,9 @@ public class InvaderManager {
         return false;
     }
 
+    /**
+     * Axis-aligned bounding box intersection test between a bullet and the player bounds.
+     */
     private boolean bulletHitsPlayer(Bullet bullet, int x, int y, int height, int width) {
         return bullet.getX() < x + width
             && bullet.getX() + bullet.getWidth() > x
@@ -250,6 +303,9 @@ public class InvaderManager {
             && bullet.getY() + bullet.getHeight() > y;
     }
 
+    /**
+     * Axis-aligned bounding box intersection test between a bullet and an invader.
+     */
     private boolean isColliding(Bullet bullet, Invader invader) {
         return bullet.getX() < invader.getX() + invader.getWidth()
             && bullet.getX() + bullet.getWidth() > invader.getX()
@@ -257,36 +313,59 @@ public class InvaderManager {
             && bullet.getY() + bullet.getHeight() > invader.getY();
     }
 
+    /**
+     * Axis-aligned bounding box intersection test between an invader and the player.
+     */
     private boolean enemyHitsPlayer(Invader invader, int x, int y, int width, int height) {
-        return invader.getX() < x + width 
+        return invader.getX() < x + width
             && invader.getX() + invader.getWidth() > x
             && invader.getY() < y + height
             && invader.getY() + invader.getHeight() > y;
     }
 
+    /**
+     * Returns a live list of enemy bullets fired by invaders.
+     * The list is owned by this manager. External code should modify it carefully.
+     *
+     * @return list of enemy bullets
+     */
     public ArrayList<Bullet> getEnemyBullets() {
         return enemyBullets;
     }
 
+    /**
+     * Returns the current score value.
+     *
+     * @return player score
+     */
     public int getScore() {
         return score;
     }
 
+    /**
+     * Indicates whether all invaders have been destroyed.
+     *
+     * @return true if no invaders remain, false otherwise
+     */
     public boolean allDead() {
         return invaders.isEmpty();
     }
 
+    /**
+     * Resets the manager to its initial state and spawns a fresh wave.
+     * Clears entities, resets difficulty parameters, and calls {@link #initializeInvaders()}.
+     */
     public void reset() {
         invaders.clear();
         enemyBullets.clear();
 
         groupDirection = 1;
-        groupSpeed = 2;  
+        groupSpeed = 2;
         shootTick = 0;
-        fireRate = 45;  
+        fireRate = 45;
         score = 0;
         scoreCheck = 0;
 
-        initializeInvaders(); 
+        initializeInvaders();
     }
 }
