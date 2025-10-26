@@ -9,39 +9,59 @@ import javax.imageio.ImageIO;
 import javax.sound.sampled.*;
 import javax.swing.*;
 
-public class GamePanel extends JPanel implements KeyListener, ActionListener {
-    private BufferedImage backgroundImg;  
-    private BufferedImage playerImg; 
+public final class GamePanel extends JPanel implements KeyListener, ActionListener {
     public static final int WIDTH = 1200;
     public static final int HEIGHT = 800;
-    private int playerX;
-    private boolean playerAlive = true;
-    private static final int PLAYERY = HEIGHT - 100;
-    private final int playerWidth = 444 / 5;
-    private final int playerHeight = 432 / 5;
-    private Timer timer;
-    private boolean leftPressed = false;
-    private boolean rightPressed = false;
-    private ArrayList<Bullet> bullets = new ArrayList<>();
-    private Font pixelFont;
-    private int playerLives = 3;
-    private boolean isVisible = true;
-    private Timer blinkTimer;
-    private boolean invulnerable = false;
-    private boolean confirmRestart = false;
+    private static final int PLAYER_Y = HEIGHT - 100;
+    private static final long SHOT_COOLDOWN = 250;
+    
     private final Window parent;
+    private final int playerWidth;
+    private final int playerHeight;
+    private final ArrayList<Bullet> bullets;
+    
+    private BufferedImage backgroundImg;  
+    private BufferedImage playerImg;
+    private Timer timer;
+    private Font pixelFont;
+    private Timer blinkTimer;
     private Clip clip;
-
     private InvaderManager invaderManager;
+    
+    private int playerX;
+    private int playerLives;
+    private long lastShotTime;
+    
+    private boolean playerAlive;
+    private boolean leftPressed;
+    private boolean rightPressed;
+    private boolean isVisible;
+    private boolean invulnerable;
+    private boolean confirmRestart;
 
-    public GamePanel(Window parent) {
+    public GamePanel(final Window parent) {
         this.parent = parent;
+        this.playerWidth = 444 / 5;
+        this.playerHeight = 432 / 5;
+        this.bullets = new ArrayList<>();
+        
+        initializePanel();
+        loadResources();
+        resetGameState();
+    }
+
+    private void initializePanel() {
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
         setDoubleBuffered(true);
         setFocusable(true);
         addKeyListener(this);
+        
         invaderManager = new InvaderManager();
-        // Remove the duplicate initializeInvaders() call
+        timer = new Timer(15, this);
+        timer.start();
+    }
+
+    private void loadResources() {
         URL urlBg = getClass().getResource("/Image/bground.png");
         URL urlPl = getClass().getResource("/Image/player.png");
 
@@ -51,18 +71,30 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
         try {
-            pixelFont = Font.createFont(Font.TRUETYPE_FONT,
-            getClass().getResourceAsStream("/fonts/pixel.ttf")).deriveFont(24f);
+            pixelFont = Font.createFont(
+                Font.TRUETYPE_FONT,
+                getClass().getResourceAsStream("/fonts/pixel.ttf")
+            ).deriveFont(24f);
         } catch (FontFormatException | IOException e) {
             pixelFont = new Font("Courier New", Font.BOLD, 24);
         }
-        playerX = (WIDTH - playerWidth) / 2;
-        this.timer = new Timer(15, this);
-        timer.start();
     }
 
-    public void play(String filePath) {
+    private void resetGameState() {
+        playerX = (WIDTH - playerWidth) / 2;
+        playerLives = 3;
+        playerAlive = true;
+        isVisible = true;
+        invulnerable = false;
+        leftPressed = false;
+        rightPressed = false;
+        confirmRestart = false;
+        lastShotTime = 0;
+    }
+
+    public void play(final String filePath) {
         try {
             File file = new File(filePath);
             AudioInputStream audioStream = AudioSystem.getAudioInputStream(file);
@@ -71,6 +103,13 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
             clip.start();
         } catch (IOException | LineUnavailableException | UnsupportedAudioFileException e) {
             e.printStackTrace();
+        }
+    }
+
+    public void stopMusic() {
+        if (clip != null) {
+            clip.stop();
+            clip.close();
         }
     }
 
@@ -85,61 +124,73 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
     }
 
     @Override
-    protected void paintComponent(Graphics g) {
+    protected void paintComponent(final Graphics g) {
         super.paintComponent(g);
+        if (backgroundImg == null) {
+            drawFallbackBackground(g);
+            return;
+        }
         
-        if (this.backgroundImg != null) {
-            g.drawImage(backgroundImg, 0, 0, getWidth(), getHeight(), null);
-            if (playerAlive && isVisible) {
-                g.drawImage(playerImg, playerX, PLAYERY, playerWidth, playerHeight, null);
-            }
-            for (Bullet b: bullets) {
-                b.draw(g);
-            }
-            
-            invaderManager.draw(g);
-
-            for (Bullet b : invaderManager.getEnemyBullets()) {
-                b.draw(g);
-            }
-
-            g.setFont(pixelFont);
-            g.setColor(Color.WHITE);
-            String scoreText = "SCORE: " + invaderManager.getScore();
-            String availLives = "";
-            if (playerLives > 0) {
-                availLives = "Lives: " + playerLives;
-            } else {
-                availLives = "Lives: " + 0;
-            }
-            FontMetrics fm = g.getFontMetrics();
-            int scoreX = WIDTH - fm.stringWidth(scoreText) - 20;
-            g.drawString(scoreText, scoreX, 30);
-            g.drawString(availLives, 30, 30);
-        } else {
-            g.setColor(Color.DARK_GRAY);
-            g.fillRect(0, 0, getWidth(), getHeight());
-            g.setColor(Color.WHITE);
-            g.drawString("Unable to load", 20, 20);
-        }
-
-
+        drawGame(g);
+        
         if (playerLives <= 0) {
-            String lose = "GAME OVER! PRESS 'SPACE' TO RESTART.";
-            String giveUp = "PRESS 'ESC' TO MENU.";
-            FontMetrics fm = g.getFontMetrics();
-            int textWidthLose = fm.stringWidth(lose);
-            int textWidthGiveUp = fm.stringWidth(giveUp);
-            int textHeight = fm.getHeight();
-            int xLose = (WIDTH - textWidthLose) / 2;
-            int xGiveUp = (WIDTH - textWidthGiveUp) / 2;
-            int y = (HEIGHT - textHeight) / 2 + fm.getAscent();
-
-
-            g.drawString(lose, xLose, y);
-            g.drawString(giveUp, xGiveUp, y + 50);
-            confirmRestart = true;
+            drawGameOver(g);
         }
+    }
+
+    private void drawFallbackBackground(final Graphics g) {
+        g.setColor(Color.DARK_GRAY);
+        g.fillRect(0, 0, getWidth(), getHeight());
+        g.setColor(Color.WHITE);
+        g.drawString("Unable to load", 20, 20);
+    }
+
+    private void drawGame(final Graphics g) {
+        g.drawImage(backgroundImg, 0, 0, getWidth(), getHeight(), null);
+        
+        if (playerAlive && isVisible) {
+            g.drawImage(playerImg, playerX, PLAYER_Y, playerWidth, playerHeight, null);
+        }
+        
+        for (Bullet bullet : bullets) {
+            bullet.draw(g);
+        }
+        
+        invaderManager.draw(g);
+        
+        for (Bullet bullet : invaderManager.getEnemyBullets()) {
+            bullet.draw(g);
+        }
+        
+        drawHUD(g);
+    }
+
+    private void drawHUD(final Graphics g) {
+        g.setFont(pixelFont);
+        g.setColor(Color.WHITE);
+        
+        String scoreText = "SCORE: " + invaderManager.getScore();
+        String livesText = "Lives: " + Math.max(playerLives, 0);
+        
+        FontMetrics fm = g.getFontMetrics();
+        int scoreX = WIDTH - fm.stringWidth(scoreText) - 20;
+        
+        g.drawString(scoreText, scoreX, 30);
+        g.drawString(livesText, 30, 30);
+    }
+
+    private void drawGameOver(final Graphics g) {
+        String lose = "GAME OVER! PRESS 'SPACE' TO RESTART.";
+        String giveUp = "PRESS 'ESC' TO MENU.";
+        
+        FontMetrics fm = g.getFontMetrics();
+        int textHeight = fm.getHeight();
+        int y = (HEIGHT - textHeight) / 2 + fm.getAscent();
+        
+        g.drawString(lose, (WIDTH - fm.stringWidth(lose)) / 2, y);
+        g.drawString(giveUp, (WIDTH - fm.stringWidth(giveUp)) / 2, y + 50);
+        
+        confirmRestart = true;
     }
 
     @Override
@@ -159,7 +210,11 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
             } else if (key == KeyEvent.VK_D || key == KeyEvent.VK_RIGHT) {
                 rightPressed = true;
             } else if (key == KeyEvent.VK_SPACE) {
-                bullets.add(new Bullet(playerX + playerWidth / 2, PLAYERY, -8));
+                long currentTime = System.currentTimeMillis();
+                if (currentTime - lastShotTime >= SHOT_COOLDOWN) {
+                    bullets.add(new Bullet(playerX + playerWidth / 2, PLAYER_Y, -8));
+                    lastShotTime = currentTime;
+                }
             }
         }
         if (confirmRestart && key == KeyEvent.VK_SPACE) {
@@ -181,8 +236,9 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
     }
 
     @Override
-    public void keyTyped(KeyEvent e) {}
-    
+    public void keyTyped(KeyEvent e) {
+
+    } 
     
     public void playerHit() {
         if (!playerAlive || invulnerable) {
@@ -199,12 +255,13 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
             blinkOnRespawn(3, 120);
         } else {
             playerAlive = false;
-            play("Music/death_sound_effect.wav");
+            stopMusic(); 
+            play("Music/death_sound_effect.wav"); 
             timer.stop();
             confirmRestart = true;
             repaint();
         }
-    } 
+    }
 
     public void respawnPlayer(int n) {
         if (!playerAlive && n > 0) {
@@ -280,7 +337,7 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
         invaderManager.update();
         invaderManager.checkCollision(bullets);
 
-        if (invaderManager.checkPlayerHit(playerX, PLAYERY, playerWidth, playerHeight)) {
+        if (invaderManager.checkPlayerHit(playerX, PLAYER_Y, playerWidth, playerHeight)) {
             playerHit();
         }
 

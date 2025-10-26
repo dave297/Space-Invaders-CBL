@@ -1,7 +1,7 @@
 import java.awt.*;
 import java.awt.image.BufferedImage;
 
-public class DefaultInvader extends Invader{
+public class DefaultInvader extends Invader {
 
     public DefaultInvader(int startX, int startY) {
         super(startX, startY);
@@ -20,7 +20,7 @@ public class DefaultInvader extends Invader{
 
     @Override
     public void draw(Graphics g, BufferedImage img) {
-        if (g == null){
+        if (g == null) {
             return;
         }
 

@@ -44,7 +44,7 @@ public class Bullet {
     
     // Getters for collision detection
     public int getX() {
-        return x + 37; 
+        return x; 
     } // Account for the offset in drawing
 
     public int getY() {

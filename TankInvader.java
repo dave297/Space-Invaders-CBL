@@ -1,9 +1,10 @@
 import java.awt.*;
 import java.awt.image.BufferedImage;
 
-public class TankInvader extends Invader{
+public class TankInvader extends Invader {
 
     int health = 3;
+    
     public TankInvader(int startX, int startY) {
         super(startX, startY);
     }
